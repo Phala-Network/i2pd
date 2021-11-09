@@ -8,6 +8,7 @@
 
 #include <string>
 #include <map>
+#include <ClientContext.h>
 #include "Config.h"
 #include "Log.h"
 #include "NetDb.hpp"
@@ -142,5 +143,45 @@ namespace api
 		if (stream)
 			stream->Close ();
 	}
+
+    std::string LoadPrivateKeysFromFile (const std::string& filename, i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType)
+    {
+        std::string fullPath = filename;    // filename is an absolute path
+        std::string idenHashB32;
+        i2p::data::PrivateKeys keys;
+
+        std::ifstream s(fullPath, std::ifstream::binary);
+        if (s.is_open ())
+        {
+            s.seekg (0, std::ios::end);
+            size_t len = s.tellg();
+            s.seekg (0, std::ios::beg);
+            uint8_t * buf = new uint8_t[len];
+            s.read ((char *)buf, len);
+            if(!keys.FromBuffer (buf, len))
+            {
+                LogPrint (eLogError, "Clients: failed to load keyfile ", filename);
+            }
+            else
+            {
+                idenHashB32 = keys.GetPublic()->GetIdentHash().ToBase32();
+                LogPrint (eLogInfo, "Clients: Local address ", idenHashB32, " loaded");
+            }
+            delete[] buf;
+            return idenHashB32;
+        }
+        else
+        {
+            keys = i2p::data::PrivateKeys::CreateRandomKeys (sigType, cryptoType);
+            std::ofstream f (fullPath, std::ofstream::binary | std::ofstream::out);
+            size_t len = keys.GetFullLen ();
+            uint8_t * buf = new uint8_t[len];
+            len = keys.ToBuffer (buf, len);
+            f.write ((char *)buf, len);
+            idenHashB32 = keys.GetPublic()->GetIdentHash().ToBase32();
+            LogPrint (eLogInfo, "Clients: New private keys file ", fullPath, " for ", idenHashB32, " created");
+            return idenHashB32;
+        }
+    }
 }
 }

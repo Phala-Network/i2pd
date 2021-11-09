@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdint.h>
 
 
 // Uses the example from: https://stackoverflow.com/a/9210560
@@ -99,6 +100,12 @@ void C_StopI2P ()
 void C_RunPeerTest ()
 {
 	return i2p::api::RunPeerTest();
+}
+
+const char * C_LoadPrivateKeysFromFile (const char * filename, uint16_t sigType, uint16_t cryptoType)
+{
+    std::string str_filename(filename);
+    return i2p::api::LoadPrivateKeysFromFile(str_filename, sigType, cryptoType).c_str();
 }
 
 #ifdef __cplusplus

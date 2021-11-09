@@ -39,6 +39,9 @@ namespace api
 	std::shared_ptr<i2p::stream::Stream> CreateStream (std::shared_ptr<i2p::client::ClientDestination> dest, const i2p::data::IdentHash& remote);
 	void AcceptStream (std::shared_ptr<i2p::client::ClientDestination> dest, const i2p::stream::StreamingDestination::Acceptor& acceptor);
 	void DestroyStream (std::shared_ptr<i2p::stream::Stream> stream);
+
+    // keys
+    std::string LoadPrivateKeysFromFile (const std::string& filename, i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType);
 }
 }
 
