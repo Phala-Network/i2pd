@@ -13,6 +13,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 // initialization start and stop
 void C_InitI2P (int argc, char argv[], const char * appName);
 // void C_InitI2P (int argc, char** argv, const char * appName);

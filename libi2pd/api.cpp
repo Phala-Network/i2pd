@@ -144,10 +144,9 @@ namespace api
 			stream->Close ();
 	}
 
-    std::string LoadPrivateKeysFromFile (const std::string& filename, i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType)
+    int LoadPrivateKeysFromFile (std::string & idenHashB32, const std::string& filename, i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType)
     {
-        std::string fullPath = filename;    // filename is an absolute path
-        std::string idenHashB32;
+        const std::string& fullPath = filename;    // filename is an absolute path
         i2p::data::PrivateKeys keys;
 
         std::ifstream s(fullPath, std::ifstream::binary);
@@ -158,17 +157,15 @@ namespace api
             s.seekg (0, std::ios::beg);
             uint8_t * buf = new uint8_t[len];
             s.read ((char *)buf, len);
-            if(!keys.FromBuffer (buf, len))
+            if ( keys.FromBuffer (buf, len) )
             {
-                LogPrint (eLogError, "Clients: failed to load keyfile ", filename);
+                idenHashB32 = keys.GetPublic()->GetIdentHash().ToBase32();
             }
             else
             {
-                idenHashB32 = keys.GetPublic()->GetIdentHash().ToBase32();
-                LogPrint (eLogInfo, "Clients: Local address ", idenHashB32, " loaded");
+                return 0;
             }
             delete[] buf;
-            return idenHashB32;
         }
         else
         {
@@ -179,9 +176,8 @@ namespace api
             len = keys.ToBuffer (buf, len);
             f.write ((char *)buf, len);
             idenHashB32 = keys.GetPublic()->GetIdentHash().ToBase32();
-            LogPrint (eLogInfo, "Clients: New private keys file ", fullPath, " for ", idenHashB32, " created");
-            return idenHashB32;
         }
+        return 1;
     }
 }
 }

@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <stdint.h>
 
+static std::string PNETWORK_IDENTITY;
 
 // Uses the example from: https://stackoverflow.com/a/9210560
 // See also https://stackoverflow.com/questions/9210528/split-string-with-delimiters-in-c/9210560#
@@ -105,7 +105,14 @@ void C_RunPeerTest ()
 const char * C_LoadPrivateKeysFromFile (const char * filename, uint16_t sigType, uint16_t cryptoType)
 {
     std::string str_filename(filename);
-    return i2p::api::LoadPrivateKeysFromFile(str_filename, sigType, cryptoType).c_str();
+    ret = i2p::api::LoadPrivateKeysFromFile(PNETWORK_IDENTITY, str_filename, sigType, cryptoType);
+    if (ret == 1)
+    {
+        return PNETWORK_IDENTITY.c_str();
+    } else
+    {
+        return NULL;
+    }
 }
 
 #ifdef __cplusplus

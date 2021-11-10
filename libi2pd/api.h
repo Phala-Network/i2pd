@@ -41,7 +41,7 @@ namespace api
 	void DestroyStream (std::shared_ptr<i2p::stream::Stream> stream);
 
     // keys
-    std::string LoadPrivateKeysFromFile (const std::string& filename, i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType);
+    int LoadPrivateKeysFromFile (std::string & idenHashB32, const std::string& filename, i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType);
 }
 }
 
