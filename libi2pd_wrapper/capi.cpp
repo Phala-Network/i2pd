@@ -77,19 +77,13 @@ void C_InitI2P (int argc, char argv[], const char * appName)
 	const char* delim = " ";
 	char* vargs = strdup(argv);
 	char** args = str_split(vargs, *delim);
-	std::cout << argv;
-	return i2p::api::InitI2P(argc, args, appName);
-}
-
-void C_TerminateI2P ()
-{
-	return i2p::api::TerminateI2P();
+    std::shared_ptr<std::ostream> p_cout(&std::cout, [](std::ostream*){});
+	return i2p::api::InitI2P(argc, args, appName, p_cout);
 }
 
 void C_StartI2P ()
 {
-	std::shared_ptr<std::ostream> logStream;
-	return i2p::api::StartI2P(logStream);
+	return i2p::api::StartI2P();
 }
 
 void C_StopI2P ()
