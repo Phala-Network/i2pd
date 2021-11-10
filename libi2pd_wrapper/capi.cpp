@@ -105,7 +105,7 @@ void C_RunPeerTest ()
 const char * C_LoadPrivateKeysFromFile (const char * filename, uint16_t sigType, uint16_t cryptoType)
 {
     std::string str_filename(filename);
-    ret = i2p::api::LoadPrivateKeysFromFile(PNETWORK_IDENTITY, str_filename, sigType, cryptoType);
+    int ret = i2p::api::LoadPrivateKeysFromFile(PNETWORK_IDENTITY, str_filename, sigType, cryptoType);
     if (ret == 1)
     {
         return PNETWORK_IDENTITY.c_str();
