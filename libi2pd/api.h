@@ -22,9 +22,19 @@ namespace api
 	// initialization start and stop
 	void InitI2P (int argc, char* argv[], const char * appName, std::shared_ptr<std::ostream> logstream = nullptr);
 	void StartI2P ();
+
 	// write system log to logStream, if not specified to <appName>.log in application's folder
+    void CloseAcceptsTunnels ();
 	void StopI2P ();
 	void RunPeerTest (); // should be called after UPnP
+
+    // fetch tunnels info
+    int GetClientTunnelsCount ();
+    int GetServerTunnelsCount ();
+    int GetClientTunnelsName (std::string& name, int index);
+    int GetClientTunnelsIdent (std::string& ident, int index);
+    int GetServerTunnelsName (std::string& name, int index);
+    int GetServerTunnelsIdent (std::string& ident, int index);
 
 	// destinations
 	std::shared_ptr<i2p::client::ClientDestination> CreateLocalDestination (const i2p::data::PrivateKeys& keys, bool isPublic = true,
@@ -40,7 +50,7 @@ namespace api
 	void DestroyStream (std::shared_ptr<i2p::stream::Stream> stream);
 
     // keys
-    int LoadPrivateKeysFromFile (std::string & idenHashB32, const std::string& filename, i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType);
+    int LoadPrivateKeysFromFile (std::string& idenHashB32, const std::string& filename, i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType);
 }
 }
 

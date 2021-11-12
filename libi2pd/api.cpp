@@ -342,6 +342,11 @@ namespace api
         i2p::client::context.Start ();
 	}
 
+    void CloseAcceptsTunnels ()
+    {
+        i2p::context.SetAcceptsTunnels (false);
+    }
+
 	void StopI2P ()
 	{
 		LogPrint(eLogInfo, "API: shutting down");
@@ -361,6 +366,70 @@ namespace api
 	{
 		i2p::transport::transports.PeerTest ();
 	}
+
+    int GetClientTunnelsCount ()
+    {
+        auto& tunnels = i2p::client::context.GetClientTunnels ();
+        return tunnels.size();
+    }
+
+    int GetServerTunnelsCount ()
+    {
+        auto& tunnels = i2p::client::context.GetServerTunnels ();
+        return tunnels.size();
+    }
+
+    int GetClientTunnelsName (std::string& name, int index)
+    {
+        if (index < GetClientTunnelsCount())
+        {
+            auto& tunnels = i2p::client::context.GetClientTunnels ();
+            auto it = tunnels.begin();
+            std::advance(it, index);
+            name = it->second->GetName();
+            return 1;
+        }
+        return 0;
+    }
+
+    int GetClientTunnelsIdent (std::string& ident, int index)
+    {
+        if (index < GetClientTunnelsCount())
+        {
+            auto& tunnels = i2p::client::context.GetClientTunnels ();
+            auto it = tunnels.begin();
+            std::advance(it, index);
+            ident = it->second->GetLocalDestination ()->GetIdentHash().ToBase32 ();
+            return 1;
+        }
+        return 0;
+    }
+
+    int GetServerTunnelsName (std::string& name, int index)
+    {
+        if (index < GetServerTunnelsCount())
+        {
+            auto& tunnels = i2p::client::context.GetServerTunnels ();
+            auto it = tunnels.begin();
+            std::advance(it, index);
+            name = it->second->GetName();
+            return 1;
+        }
+        return 0;
+    }
+
+    int GetServerTunnelsIdent (std::string& ident, int index)
+    {
+        if (index < GetServerTunnelsCount())
+        {
+            auto& tunnels = i2p::client::context.GetServerTunnels ();
+            auto it = tunnels.begin();
+            std::advance(it, index);
+            ident = it->second->GetLocalDestination ()->GetIdentHash().ToBase32 () + " : " + std::to_string(it->second->GetLocalPort ());
+            return 1;
+        }
+        return 0;
+    }
 
 	std::shared_ptr<i2p::client::ClientDestination> CreateLocalDestination (const i2p::data::PrivateKeys& keys, bool isPublic,
 		const std::map<std::string, std::string> * params)
@@ -420,7 +489,7 @@ namespace api
 			stream->Close ();
 	}
 
-    int LoadPrivateKeysFromFile (std::string & idenHashB32, const std::string& filename, i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType)
+    int LoadPrivateKeysFromFile (std::string& idenHashB32, const std::string& filename, i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType)
     {
         const std::string& fullPath = filename;    // filename is an absolute path
         i2p::data::PrivateKeys keys;
