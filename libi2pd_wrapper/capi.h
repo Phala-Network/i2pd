@@ -23,11 +23,27 @@ void C_StartI2P ();
 void C_CloseAcceptsTunnels ();
 void C_StopI2P ();
 void C_RunPeerTest (); // should be called after UPnP
+// fetch status
+const char * C_GetNetworkStatus ();
+int C_GetTunnelCreationSuccessRate ();
+uint64_t C_GetReceivedByte ();
+uint32_t C_GetInBandwidth ();
+uint64_t C_GetSentByte ();
+uint32_t C_GetOutBandwidth ();
+uint64_t C_GetTransitByte ();
+uint32_t C_GetTransitBandwidth ();
+int C_IsHTTPProxyEnabled ();
+int C_IsSOCKSProxyEnabled ();
+int C_IsBOBEnabled ();
+int C_IsSAMEnabled ();
+int C_IsI2CPEnabled ();
 // fetch tunnels info
 int C_GetClientTunnelsCount ();
 int C_GetServerTunnelsCount ();
 const char * C_GetClientTunnelsName (int index);
 const char * C_GetClientTunnelsIdent (int index);
+const char * C_GetHTTPProxyIdent ();
+const char * C_GetSOCKSProxyIdent ();
 const char * C_GetServerTunnelsName (int index);
 const char * C_GetServerTunnelsIdent (int index);
 // key related

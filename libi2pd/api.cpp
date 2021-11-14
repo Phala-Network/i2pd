@@ -367,6 +367,112 @@ namespace api
 		i2p::transport::transports.PeerTest ();
 	}
 
+    int GetNetworkStatus (std::string& status)
+    {
+        auto contextStatus = i2p::context.GetStatus ();
+        switch (contextStatus)
+        {
+            case eRouterStatusOK: status = "OK"; break;
+            case eRouterStatusTesting: status = "Testing"; break;
+            case eRouterStatusFirewalled: status = "Firewalled"; break;
+            case eRouterStatusUnknown: status = "Unknown"; break;
+            case eRouterStatusProxy: status = "Proxy"; break;
+            case eRouterStatusMesh: status = "Mesh"; break;
+            case eRouterStatusError:
+            {
+                switch (i2p::context.GetError ())
+                {
+                    case eRouterErrorClockSkew:
+                        status = "Error - Clock skew";
+                        break;
+                    case eRouterErrorOffline:
+                        status = "Error - Offline";
+                        break;
+                    case eRouterErrorSymmetricNAT:
+                        status = "Error - Symmetric NAT";
+                        break;
+                    default:
+                        status = "Error - Unknown";
+                }
+                break;
+            }
+            default: status = "Unknown";
+        }
+        return 1;
+    }
+
+    int GetTunnelCreationSuccessRate ()
+    {
+        int ret = i2p::tunnel::tunnels.GetTunnelCreationSuccessRate ();
+        return ret;
+    }
+
+    uint64_t GetReceivedByte ()
+    {
+        uint64_t ret = i2p::transport::transports.GetTotalReceivedBytes ();
+        return ret;
+    }
+
+    uint32_t GetInBandwidth ()
+    {
+        uint32_t ret = i2p::transport::transports.GetInBandwidth ();
+        return ret;
+    }
+
+    uint64_t GetSentByte ()
+    {
+        uint64_t ret = i2p::transport::transports.GetTotalSentBytes ();
+        return ret;
+    }
+
+    uint32_t GetOutBandwidth ()
+    {
+        uint32_t ret = i2p::transport::transports.GetOutBandwidth ();
+        return ret;
+    }
+
+    uint64_t GetTransitByte ()
+    {
+        uint64_t ret = i2p::transport::transports.GetTotalTransitTransmittedBytes ();
+        return ret;
+    }
+
+    uint32_t GetTransitBandwidth ()
+    {
+        uint32_t ret = i2p::transport::transports.GetTransitBandwidth ();
+        return ret;
+    }
+
+    int IsHTTPProxyEnabled ()
+    {
+        int ret = i2p::client::context.GetHttpProxy () ? 1 : 0;
+        return ret;
+    }
+
+    int IsSOCKSProxyEnabled ()
+    {
+        int ret = i2p::client::context.GetSocksProxy () ? 1 : 0;
+        return ret;
+    }
+
+    int IsBOBEnabled ()
+    {
+        int ret = i2p::client::context.GetBOBCommandChannel () ? 1 : 0;
+        return ret;
+    }
+
+    int IsSAMEnabled ()
+    {
+        int ret = i2p::client::context.GetSAMBridge () ? 1 : 0;
+        return ret;
+    }
+
+    int IsI2CPEnabled ()
+    {
+        int ret = i2p::client::context.GetI2CPServer () ? 1 : 0;
+        return ret;
+    }
+
     int GetClientTunnelsCount ()
     {
         auto& tunnels = i2p::client::context.GetClientTunnels ();
@@ -400,6 +506,28 @@ namespace api
             auto it = tunnels.begin();
             std::advance(it, index);
             ident = it->second->GetLocalDestination ()->GetIdentHash().ToBase32 ();
+            return 1;
+        }
+        return 0;
+    }
+
+    int GetHTTPProxyIdent (std::string& ident)
+    {
+        auto httpProxy = i2p::client::context.GetHttpProxy ();
+        if (httpProxy)
+        {
+            ident = httpProxy->GetLocalDestination ()->GetIdentHash().ToBase32();
+            return 1;
+        }
+        return 0;
+    }
+
+    int GetSOCKSProxyIdent (std::string& ident)
+    {
+        auto socksProxy = i2p::client::context.GetSocksProxy ();
+        if (socksProxy)
+        {
+            ident = socksProxy->GetLocalDestination ()->GetIdentHash().ToBase32();
             return 1;
         }
         return 0;

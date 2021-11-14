@@ -277,3 +277,4 @@ android/libs/
 
 qt/build-*.sh*
 
+.idea/

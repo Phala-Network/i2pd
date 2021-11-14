@@ -28,11 +28,28 @@ namespace api
 	void StopI2P ();
 	void RunPeerTest (); // should be called after UPnP
 
+    // fetch status
+    int GetNetworkStatus (std::string& status);
+    int GetTunnelCreationSuccessRate ();
+    uint64_t GetReceivedByte ();
+    uint32_t GetInBandwidth ();
+    uint64_t GetSentByte ();
+    uint32_t GetOutBandwidth ();
+    uint64_t GetTransitByte ();
+    uint32_t GetTransitBandwidth ();
+    int IsHTTPProxyEnabled ();
+    int IsSOCKSProxyEnabled ();
+    int IsBOBEnabled ();
+    int IsSAMEnabled ();
+    int IsI2CPEnabled ();
+
     // fetch tunnels info
     int GetClientTunnelsCount ();
     int GetServerTunnelsCount ();
     int GetClientTunnelsName (std::string& name, int index);
     int GetClientTunnelsIdent (std::string& ident, int index);
+    int GetHTTPProxyIdent (std::string& ident);
+    int GetSOCKSProxyIdent (std::string& ident);
     int GetServerTunnelsName (std::string& name, int index);
     int GetServerTunnelsIdent (std::string& ident, int index);
 

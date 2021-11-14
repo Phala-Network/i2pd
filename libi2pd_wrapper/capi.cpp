@@ -100,6 +100,90 @@ void C_RunPeerTest ()
 	return i2p::api::RunPeerTest();
 }
 
+const char * C_GetNetworkStatus ()
+{
+    int ret = i2p::api::GetNetworkStatus(RET_STR);
+    if (ret == 1)
+    {
+        return RET_STR.c_str();
+    } else
+    {
+        return NULL;
+    };
+}
+
+int C_GetTunnelCreationSuccessRate ()
+{
+    int ret = i2p::api::GetTunnelCreationSuccessRate();
+    return ret;
+}
+
+uint64_t C_GetReceivedByte ()
+{
+    uint64_t ret = i2p::api::GetReceivedByte();
+    return ret;
+}
+
+uint32_t C_GetInBandwidth ()
+{
+    uint32_t ret = i2p::api::GetInBandwidth();
+    return ret;
+}
+
+uint64_t C_GetSentByte ()
+{
+    uint64_t ret = i2p::api::GetSentByte();
+    return ret;
+}
+
+uint32_t C_GetOutBandwidth ()
+{
+    uint32_t ret = i2p::api::GetOutBandwidth();
+    return ret;
+}
+
+uint64_t C_GetTransitByte ()
+{
+    uint64_t ret = i2p::api::GetTransitByte();
+    return ret;
+}
+
+uint32_t C_GetTransitBandwidth ()
+{
+    uint32_t ret = i2p::api::GetTransitBandwidth();
+    return ret;
+}
+
+int C_IsHTTPProxyEnabled ()
+{
+    int ret = i2p::api::IsHTTPProxyEnabled();
+    return ret;
+}
+
+int C_IsSOCKSProxyEnabled ()
+{
+    int ret = i2p::api::IsSOCKSProxyEnabled();
+    return ret;
+}
+
+int C_IsBOBEnabled ()
+{
+    int ret = i2p::api::IsBOBEnabled();
+    return ret;
+}
+
+int C_IsSAMEnabled ()
+{
+    int ret = i2p::api::IsSAMEnabled();
+    return ret;
+}
+
+int C_IsI2CPEnabled ()
+{
+    int ret = i2p::api::IsI2CPEnabled();
+    return ret;
+}
+
 int C_GetClientTunnelsCount ()
 {
     int ret = i2p::api::GetClientTunnelsCount();
@@ -142,6 +226,30 @@ const char * C_GetClientTunnelsIdent (int index)
         };
     }
     return NULL;
+}
+
+const char * C_GetHTTPProxyIdent ()
+{
+    int ret = i2p::api::GetHTTPProxyIdent(RET_STR);
+    if (ret == 1)
+    {
+        return RET_STR.c_str();
+    } else
+    {
+        return NULL;
+    };
+}
+
+const char * C_GetSOCKSProxyIdent ()
+{
+    int ret = i2p::api::GetSOCKSProxyIdent(RET_STR);
+    if (ret == 1)
+    {
+        return RET_STR.c_str();
+    } else
+    {
+        return NULL;
+    };
 }
 
 const char * C_GetServerTunnelsName (int index)
