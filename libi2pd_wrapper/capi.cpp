@@ -284,17 +284,13 @@ const char * C_GetServerTunnelsIdent (int index)
     return NULL;
 }
 
-const char * C_LoadPrivateKeysFromFile (const char * filename, uint16_t sigType, uint16_t cryptoType)
+void C_GenerateIdentToFile (const char * filename, const char * sk, uint16_t sigType, uint16_t cryptoType)
 {
+    size_t SK_LENGTH = 64; // 64 bytes
+    uint8_t uint_sk[SK_LENGTH];
+    memcpy(uint_sk, sk, SK_LENGTH);
     std::string str_filename(filename);
-    int ret = i2p::api::LoadPrivateKeysFromFile(RET_STR, str_filename, sigType, cryptoType);
-    if (ret == 1)
-    {
-        return RET_STR.c_str();
-    } else
-    {
-        return NULL;
-    }
+    i2p::api::GenerateIdentToFile(str_filename, uint_sk, sigType, cryptoType);
 }
 
 #ifdef __cplusplus

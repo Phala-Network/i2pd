@@ -487,12 +487,23 @@ namespace crypto
 #endif
 		BN_CTX * ctx = BN_CTX_new ();
 		BIGNUM * p = BN_new ();
-		BN_bin2bn (priv, 256, p);
-		BN_mod_exp (p, elgg, p, elgp, ctx);
-		bn2buf (p, pub, 256);
+		BN_bin2bn (priv, 256, p); // convert priv into a big-endian form bignum
+		BN_mod_exp (p, elgg, p, elgp, ctx); // p = elgg ^ p % elgp
+		bn2buf (p, pub, 256); // store p into pub
 		BN_free (p);
 		BN_CTX_free (ctx);
 	}
+
+    void GenerateElGamalKeyPairBySk (uint8_t * priv, uint8_t * pub)
+    {
+        BN_CTX * ctx = BN_CTX_new ();
+        BIGNUM * p = BN_new ();
+        BN_bin2bn (priv, 256, p); // convert priv into a big-endian form bignum
+        BN_mod_exp (p, elgg, p, elgp, ctx); // p = elgg ^ p % elgp
+        bn2buf (p, pub, 256); // store p into pub
+        BN_free (p);
+        BN_CTX_free (ctx);
+    }
 
 // ECIES
 	void ECIESEncrypt (const EC_GROUP * curve, const EC_POINT * key, const uint8_t * data, uint8_t * encrypted)

@@ -355,13 +355,13 @@ namespace crypto
 #if OPENSSL_EDDSA
 		EVP_PKEY *pkey = NULL;
 		EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id (EVP_PKEY_ED25519, NULL);
-		EVP_PKEY_keygen_init (pctx);
-		EVP_PKEY_keygen (pctx, &pkey);
-		EVP_PKEY_CTX_free (pctx);
-		size_t len = EDDSA25519_PUBLIC_KEY_LENGTH;
-		EVP_PKEY_get_raw_public_key (pkey, signingPublicKey, &len);
-		len = EDDSA25519_PRIVATE_KEY_LENGTH;
-		EVP_PKEY_get_raw_private_key (pkey, signingPrivateKey, &len);
+		EVP_PKEY_keygen_init (pctx); //  initializes a public key algorithm context
+		EVP_PKEY_keygen (pctx, &pkey); // performs a key generation operation, the generated key is written to pkey
+		EVP_PKEY_CTX_free (pctx); // free context
+		size_t len = EDDSA25519_PUBLIC_KEY_LENGTH; // 32
+		EVP_PKEY_get_raw_public_key (pkey, signingPublicKey, &len); // fills the buffer provided by signingPublicKey
+		len = EDDSA25519_PRIVATE_KEY_LENGTH; // 32
+		EVP_PKEY_get_raw_private_key (pkey, signingPrivateKey, &len); // fills the buffer provided by signingPrivateKey
 		EVP_PKEY_free (pkey);
 #else
 		RAND_bytes (signingPrivateKey, EDDSA25519_PRIVATE_KEY_LENGTH);
@@ -369,6 +369,12 @@ namespace crypto
 		memcpy (signingPublicKey, signer.GetPublicKey (), EDDSA25519_PUBLIC_KEY_LENGTH);
 #endif
 	}
+
+    inline void CreateEDDSA25519Keys (uint8_t * signingPrivateKey, uint8_t * signingPublicKey)
+    {
+        EDDSA25519SignerCompat signer (signingPrivateKey);
+        memcpy (signingPublicKey, signer.GetPublicKey (), EDDSA25519_PUBLIC_KEY_LENGTH);
+    }
 
 
 	// ГОСТ Р 34.11

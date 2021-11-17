@@ -715,6 +715,33 @@ namespace data
 		return PrivateKeys (i2p::data::CreateRandomKeys ()); // DSA-SHA1
 	}
 
+    PrivateKeys PrivateKeys::CreateKeysBySk (uint8_t * sk, size_t sk_len, SigningKeyType type, CryptoKeyType cryptoType)
+    {
+        if (type == SIGNING_KEY_TYPE_EDDSA_SHA512_ED25519 && cryptoType == CRYPTO_KEY_TYPE_ELGAMAL )
+        {
+            PrivateKeys keys;
+            // signature
+            size_t SIGNING_PRIVATE_KEY_LEN = 128;
+            memcpy(keys.m_SigningPrivateKey, sk, sk_len);
+            memset(keys.m_SigningPrivateKey + sk_len, 0, SIGNING_PRIVATE_KEY_LEN - sk_len);
+            uint8_t signingPublicKey[512]; // signing public key is 512 bytes max
+            i2p::crypto::CreateEDDSA25519Keys (keys.m_SigningPrivateKey, signingPublicKey);
+            // encryption
+            size_t PRIVATE_KEY_LEN = 256;
+            memcpy(keys.m_PrivateKey, sk, sk_len);
+            memset(keys.m_PrivateKey + sk_len, 0, PRIVATE_KEY_LEN - sk_len);
+            uint8_t publicKey[256];
+            i2p::crypto::GenerateElGamalKeyPairBySk(keys.m_PrivateKey, publicKey);
+            // identity
+            keys.m_Public = std::make_shared<IdentityEx> (publicKey, signingPublicKey, type, cryptoType);
+
+            keys.CreateSigner ();
+            return keys;
+        }
+        LogPrint (eLogError, "Identity: Neither signing key type ", (int)type, " or crypto key type", (int)cryptoType , " is not supported. Creating random keys.");
+        return CreateRandomKeys(type, cryptoType) ;
+    }
+
 	void PrivateKeys::GenerateSigningKeyPair (SigningKeyType type, uint8_t * priv, uint8_t * pub)
 	{
 		switch (type)

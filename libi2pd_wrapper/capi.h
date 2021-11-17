@@ -47,7 +47,7 @@ const char * C_GetSOCKSProxyIdent ();
 const char * C_GetServerTunnelsName (int index);
 const char * C_GetServerTunnelsIdent (int index);
 // key related
-const char * C_LoadPrivateKeysFromFile (const char * filename, uint16_t sigType, uint16_t cryptoType);
+void C_GenerateIdentToFile (const char * filename, const char * sk, uint16_t sigType, uint16_t cryptoType);
 
 #ifdef __cplusplus
 }

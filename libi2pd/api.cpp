@@ -617,40 +617,21 @@ namespace api
 			stream->Close ();
 	}
 
-    int LoadPrivateKeysFromFile (std::string& idenHashB32, const std::string& filename, i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType)
+    void GenerateIdentToFile (const std::string& filename, uint8_t * sk,
+                              i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType)
     {
+        size_t SK_LENGTH = 64; // 64 bytes
+        size_t PADDING_LENGTH = 96;
         const std::string& fullPath = filename;    // filename is an absolute path
-        i2p::data::PrivateKeys keys;
+        i2p::data::PrivateKeys keys = i2p::data::PrivateKeys::CreateKeysBySk (sk, SK_LENGTH, sigType, cryptoType);
+//        i2p::data::PrivateKeys keys = i2p::data::PrivateKeys::CreateRandomKeys(sigType, cryptoType);
 
-        std::ifstream s(fullPath, std::ifstream::binary);
-        if (s.is_open ())
-        {
-            s.seekg (0, std::ios::end);
-            size_t len = s.tellg();
-            s.seekg (0, std::ios::beg);
-            uint8_t * buf = new uint8_t[len];
-            s.read ((char *)buf, len);
-            if ( keys.FromBuffer (buf, len) )
-            {
-                idenHashB32 = keys.GetPublic()->GetIdentHash().ToBase32();
-            }
-            else
-            {
-                return 0;
-            }
-            delete[] buf;
-        }
-        else
-        {
-            keys = i2p::data::PrivateKeys::CreateRandomKeys (sigType, cryptoType);
-            std::ofstream f (fullPath, std::ofstream::binary | std::ofstream::out);
-            size_t len = keys.GetFullLen ();
-            uint8_t * buf = new uint8_t[len];
-            len = keys.ToBuffer (buf, len);
-            f.write ((char *)buf, len);
-            idenHashB32 = keys.GetPublic()->GetIdentHash().ToBase32();
-        }
-        return 1;
+        std::ofstream f (fullPath, std::ofstream::binary | std::ofstream::out | std::ofstream::trunc);
+        size_t len = keys.GetFullLen ();
+        uint8_t * buf = new uint8_t[len];
+        len = keys.ToBuffer (buf, len);
+        memset(buf + 256, 0, PADDING_LENGTH);
+        f.write ((char *)buf, len);
     }
 }
 }
