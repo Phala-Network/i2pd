@@ -284,6 +284,50 @@ const char * C_GetServerTunnelsIdent (int index)
     return NULL;
 }
 
+int C_GetInboundTunnelsCount ()
+{
+    int ret = i2p::api::GetInboundTunnelsCount ();
+    return ret;
+}
+
+int C_GetOutboundTunnelsCount ()
+{
+    int ret = i2p::api::GetOutboundTunnelsCount ();
+    return ret;
+}
+
+const char * C_GetInboundTunnelsFormattedInfo (int index)
+{
+    if (index < C_GetInboundTunnelsCount())
+    {
+        int ret = i2p::api::GetInboundTunnelsFormattedInfo(RET_STR, index);
+        if (ret == 1)
+        {
+            return RET_STR.c_str();
+        } else
+        {
+            return NULL;
+        };
+    }
+    return NULL;
+}
+
+const char * C_GetOutboundTunnelsFormattedInfo (int index)
+{
+    if (index < C_GetOutboundTunnelsCount())
+    {
+        int ret = i2p::api::GetOutboundTunnelsFormattedInfo(RET_STR, index);
+        if (ret == 1)
+        {
+            return RET_STR.c_str();
+        } else
+        {
+            return NULL;
+        };
+    }
+    return NULL;
+}
+
 void C_GenerateIdentToFile (const char * filename, const char * sk, uint16_t sigType, uint16_t cryptoType)
 {
     size_t SK_LENGTH = 64; // 64 bytes

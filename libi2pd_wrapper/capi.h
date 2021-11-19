@@ -46,6 +46,11 @@ const char * C_GetHTTPProxyIdent ();
 const char * C_GetSOCKSProxyIdent ();
 const char * C_GetServerTunnelsName (int index);
 const char * C_GetServerTunnelsIdent (int index);
+
+int C_GetInboundTunnelsCount ();
+int C_GetOutboundTunnelsCount ();
+const char * C_GetInboundTunnelsFormattedInfo (int index);
+const char * C_GetOutboundTunnelsFormattedInfo (int index);
 // key related
 void C_GenerateIdentToFile (const char * filename, const char * sk, uint16_t sigType, uint16_t cryptoType);
 

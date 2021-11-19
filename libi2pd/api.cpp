@@ -559,6 +559,83 @@ namespace api
         return 0;
     }
 
+    int GetInboundTunnelsCount ()
+    {
+        auto& tunnels = i2p::tunnel::tunnels.GetInboundTunnels ();
+        return tunnels.size();
+    }
+
+    int GetOutboundTunnelsCount ()
+    {
+        auto& tunnels = i2p::tunnel::tunnels.GetOutboundTunnels();
+        return tunnels.size();
+    }
+
+    int GetInboundTunnelsFormattedInfo (std::string& info, int index)
+    {
+        if (index < GetInboundTunnelsCount())
+        {
+            auto ExplPool = i2p::tunnel::tunnels.GetExploratoryPool ();
+            auto& tunnels = i2p::tunnel::tunnels.GetInboundTunnels ();
+            auto it = tunnels.begin();
+            std::advance(it, index);
+            std::stringstream ss;
+            (*it)->Print(ss);
+            if ((*it)->LatencyIsKnown())
+                ss << " ( " << (*it)->GetMeanLatency() << "ms )";
+
+            std::string stateText;
+            switch ((*it)->GetState()) {
+                case i2p::tunnel::eTunnelStateBuildReplyReceived :
+                case i2p::tunnel::eTunnelStatePending     : stateText = "building";    break;
+                case i2p::tunnel::eTunnelStateBuildFailed :
+                case i2p::tunnel::eTunnelStateTestFailed  :
+                case i2p::tunnel::eTunnelStateFailed      : stateText = "failed";      break;
+                case i2p::tunnel::eTunnelStateExpiring    : stateText = "expiring";    break;
+                case i2p::tunnel::eTunnelStateEstablished : stateText = "established"; break;
+                default: stateText = "unknown"; break;
+            }
+
+            ss << " " << stateText << (((*it)->GetTunnelPool () == ExplPool) ? " (exploratory)," : ",");
+            ss << " " << (int) ((*it)->GetNumReceivedBytes() / 1024) << " KiB";
+            info = ss.str();
+            return 1;
+        }
+        return 0;
+    }
+
+    int GetOutboundTunnelsFormattedInfo (std::string& info, int index)
+    {
+        if (index < GetOutboundTunnelsCount())
+        {
+            auto ExplPool = i2p::tunnel::tunnels.GetExploratoryPool ();
+            auto& tunnels = i2p::tunnel::tunnels.GetOutboundTunnels ();
+            auto it = tunnels.begin();
+            std::advance(it, index);
+            std::stringstream ss;
+            (*it)->Print(ss);
+            if ((*it)->LatencyIsKnown())
+                ss << " ( " << (*it)->GetMeanLatency() << "ms )";
+
+            std::string stateText;
+            switch ((*it)->GetState()) {
+                case i2p::tunnel::eTunnelStateBuildReplyReceived :
+                case i2p::tunnel::eTunnelStatePending     : stateText = "building";    break;
+                case i2p::tunnel::eTunnelStateBuildFailed :
+                case i2p::tunnel::eTunnelStateTestFailed  :
+                case i2p::tunnel::eTunnelStateFailed      : stateText = "failed";      break;
+                case i2p::tunnel::eTunnelStateExpiring    : stateText = "expiring";    break;
+                case i2p::tunnel::eTunnelStateEstablished : stateText = "established"; break;
+                default: stateText = "unknown"; break;
+            }
+            ss << " " << stateText << (((*it)->GetTunnelPool () == ExplPool) ? " (exploratory)," : ",");
+            ss << " " << (int) ((*it)->GetNumSentBytes () / 1024) << " KiB";
+            info = ss.str();
+            return 1;
+        }
+        return 0;
+    }
+
 	std::shared_ptr<i2p::client::ClientDestination> CreateLocalDestination (const i2p::data::PrivateKeys& keys, bool isPublic,
 		const std::map<std::string, std::string> * params)
 	{
@@ -624,7 +701,6 @@ namespace api
         size_t PADDING_LENGTH = 96;
         const std::string& fullPath = filename;    // filename is an absolute path
         i2p::data::PrivateKeys keys = i2p::data::PrivateKeys::CreateKeysBySk (sk, SK_LENGTH, sigType, cryptoType);
-//        i2p::data::PrivateKeys keys = i2p::data::PrivateKeys::CreateRandomKeys(sigType, cryptoType);
 
         std::ofstream f (fullPath, std::ofstream::binary | std::ofstream::out | std::ofstream::trunc);
         size_t len = keys.GetFullLen ();

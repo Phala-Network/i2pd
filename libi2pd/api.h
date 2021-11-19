@@ -53,6 +53,11 @@ namespace api
     int GetServerTunnelsName (std::string& name, int index);
     int GetServerTunnelsIdent (std::string& ident, int index);
 
+    int GetInboundTunnelsCount ();
+    int GetOutboundTunnelsCount ();
+    int GetInboundTunnelsFormattedInfo (std::string& info, int index);
+    int GetOutboundTunnelsFormattedInfo (std::string& info, int index);
+
 	// destinations
 	std::shared_ptr<i2p::client::ClientDestination> CreateLocalDestination (const i2p::data::PrivateKeys& keys, bool isPublic = true,
 		const std::map<std::string, std::string> * params = nullptr);
