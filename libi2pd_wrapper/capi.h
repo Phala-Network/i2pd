@@ -52,7 +52,7 @@ int C_GetOutboundTunnelsCount ();
 const char * C_GetInboundTunnelsFormattedInfo (int index);
 const char * C_GetOutboundTunnelsFormattedInfo (int index);
 // key related
-void C_GenerateIdentToFile (const char * filename, const char * sk, uint16_t sigType, uint16_t cryptoType);
+const char * C_GenerateIdentToFile (const char * filename, const char * sk, uint16_t sigType, uint16_t cryptoType);
 
 #ifdef __cplusplus
 }

@@ -694,7 +694,7 @@ namespace api
 			stream->Close ();
 	}
 
-    void GenerateIdentToFile (const std::string& filename, uint8_t * sk,
+    int GenerateIdentToFile (std::string& ident, const std::string& filename, uint8_t * sk,
                               i2p::data::SigningKeyType sigType, i2p::data::CryptoKeyType cryptoType)
     {
         size_t SK_LENGTH = 64; // 64 bytes
@@ -707,7 +707,18 @@ namespace api
         uint8_t * buf = new uint8_t[len];
         len = keys.ToBuffer (buf, len);
         memset(buf + 256, 0, PADDING_LENGTH);
-        f.write ((char *)buf, len);
+
+        i2p::data::PrivateKeys ident_keys;
+        if(!ident_keys.FromBuffer (buf, len))
+        {
+            return 0;
+        }
+        else
+        {
+            ident = ident_keys.GetPublic() -> GetIdentHash().ToBase32();
+            f.write ((char *)buf, len);
+            return 1;
+        }
     }
 }
 }
