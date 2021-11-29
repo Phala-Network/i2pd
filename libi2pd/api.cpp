@@ -398,7 +398,7 @@ namespace api
             }
             default: status = "Unknown";
         }
-        return 1;
+        return 0;
     }
 
     int GetTunnelCreationSuccessRate ()
@@ -493,9 +493,9 @@ namespace api
             auto it = tunnels.begin();
             std::advance(it, index);
             name = it->second->GetName();
-            return 1;
+            return 0;
         }
-        return 0;
+        return 1;
     }
 
     int GetClientTunnelsIdent (std::string& ident, int index)
@@ -506,9 +506,9 @@ namespace api
             auto it = tunnels.begin();
             std::advance(it, index);
             ident = it->second->GetLocalDestination ()->GetIdentHash().ToBase32 ();
-            return 1;
+            return 0;
         }
-        return 0;
+        return 1;
     }
 
     int GetHTTPProxyIdent (std::string& ident)
@@ -517,9 +517,9 @@ namespace api
         if (httpProxy)
         {
             ident = httpProxy->GetLocalDestination ()->GetIdentHash().ToBase32();
-            return 1;
+            return 0;
         }
-        return 0;
+        return 1;
     }
 
     int GetSOCKSProxyIdent (std::string& ident)
@@ -528,9 +528,9 @@ namespace api
         if (socksProxy)
         {
             ident = socksProxy->GetLocalDestination ()->GetIdentHash().ToBase32();
-            return 1;
+            return 0;
         }
-        return 0;
+        return 1;
     }
 
     int GetServerTunnelsName (std::string& name, int index)
@@ -541,9 +541,9 @@ namespace api
             auto it = tunnels.begin();
             std::advance(it, index);
             name = it->second->GetName();
-            return 1;
+            return 0;
         }
-        return 0;
+        return 1;
     }
 
     int GetServerTunnelsIdent (std::string& ident, int index)
@@ -554,9 +554,9 @@ namespace api
             auto it = tunnels.begin();
             std::advance(it, index);
             ident = it->second->GetLocalDestination ()->GetIdentHash().ToBase32 () + " : " + std::to_string(it->second->GetLocalPort ());
-            return 1;
+            return 0;
         }
-        return 0;
+        return 1;
     }
 
     int GetInboundTunnelsCount ()
@@ -599,9 +599,9 @@ namespace api
             ss << " " << stateText << (((*it)->GetTunnelPool () == ExplPool) ? " (exploratory)," : ",");
             ss << " " << (int) ((*it)->GetNumReceivedBytes() / 1024) << " KiB";
             info = ss.str();
-            return 1;
+            return 0;
         }
-        return 0;
+        return 1;
     }
 
     int GetOutboundTunnelsFormattedInfo (std::string& info, int index)
@@ -631,9 +631,9 @@ namespace api
             ss << " " << stateText << (((*it)->GetTunnelPool () == ExplPool) ? " (exploratory)," : ",");
             ss << " " << (int) ((*it)->GetNumSentBytes () / 1024) << " KiB";
             info = ss.str();
-            return 1;
+            return 0;
         }
-        return 0;
+        return 1;
     }
 
 	std::shared_ptr<i2p::client::ClientDestination> CreateLocalDestination (const i2p::data::PrivateKeys& keys, bool isPublic,
@@ -711,13 +711,13 @@ namespace api
         i2p::data::PrivateKeys ident_keys;
         if(!ident_keys.FromBuffer (buf, len))
         {
-            return 0;
+            return 1;
         }
         else
         {
             ident = ident_keys.GetPublic() -> GetIdentHash().ToBase32();
             f.write ((char *)buf, len);
-            return 1;
+            return 0;
         }
     }
 }

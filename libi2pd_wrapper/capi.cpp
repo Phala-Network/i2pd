@@ -103,7 +103,7 @@ void C_RunPeerTest ()
 const char * C_GetNetworkStatus ()
 {
     int ret = i2p::api::GetNetworkStatus(RET_STR);
-    if (ret == 1)
+    if (ret == 0)
     {
         return RET_STR.c_str();
     } else
@@ -201,7 +201,7 @@ const char * C_GetClientTunnelsName (int index)
     if (index < C_GetClientTunnelsCount())
     {
         int ret = i2p::api::GetClientTunnelsName(RET_STR, index);
-        if (ret == 1)
+        if (ret == 0)
         {
             return RET_STR.c_str();
         } else
@@ -217,7 +217,7 @@ const char * C_GetClientTunnelsIdent (int index)
     if (index < C_GetClientTunnelsCount())
     {
         int ret = i2p::api::GetClientTunnelsIdent(RET_STR, index);
-        if (ret == 1)
+        if (ret == 0)
         {
             return RET_STR.c_str();
         } else
@@ -231,7 +231,7 @@ const char * C_GetClientTunnelsIdent (int index)
 const char * C_GetHTTPProxyIdent ()
 {
     int ret = i2p::api::GetHTTPProxyIdent(RET_STR);
-    if (ret == 1)
+    if (ret == 0)
     {
         return RET_STR.c_str();
     } else
@@ -243,7 +243,7 @@ const char * C_GetHTTPProxyIdent ()
 const char * C_GetSOCKSProxyIdent ()
 {
     int ret = i2p::api::GetSOCKSProxyIdent(RET_STR);
-    if (ret == 1)
+    if (ret == 0)
     {
         return RET_STR.c_str();
     } else
@@ -257,7 +257,7 @@ const char * C_GetServerTunnelsName (int index)
     if (index < C_GetServerTunnelsCount())
     {
         int ret = i2p::api::GetServerTunnelsName(RET_STR, index);
-        if (ret == 1)
+        if (ret == 0)
         {
             return RET_STR.c_str();
         } else
@@ -273,7 +273,7 @@ const char * C_GetServerTunnelsIdent (int index)
     if (index < C_GetServerTunnelsCount())
     {
         int ret = i2p::api::GetServerTunnelsIdent(RET_STR, index);
-        if (ret == 1)
+        if (ret == 0)
         {
             return RET_STR.c_str();
         } else
@@ -301,7 +301,7 @@ const char * C_GetInboundTunnelsFormattedInfo (int index)
     if (index < C_GetInboundTunnelsCount())
     {
         int ret = i2p::api::GetInboundTunnelsFormattedInfo(RET_STR, index);
-        if (ret == 1)
+        if (ret == 0)
         {
             return RET_STR.c_str();
         } else
@@ -317,7 +317,7 @@ const char * C_GetOutboundTunnelsFormattedInfo (int index)
     if (index < C_GetOutboundTunnelsCount())
     {
         int ret = i2p::api::GetOutboundTunnelsFormattedInfo(RET_STR, index);
-        if (ret == 1)
+        if (ret == 0)
         {
             return RET_STR.c_str();
         } else
@@ -335,7 +335,7 @@ const char * C_GenerateIdentToFile (const char * filename, const char * sk, uint
     memcpy(uint_sk, sk, SK_LENGTH);
     std::string str_filename(filename);
     int ret = i2p::api::GenerateIdentToFile(RET_STR, str_filename, uint_sk, sigType, cryptoType);
-    if (ret == 1)
+    if (ret == 0)
     {
         return RET_STR.c_str();
     } else
