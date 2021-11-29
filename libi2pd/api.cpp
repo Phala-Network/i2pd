@@ -312,34 +312,12 @@ namespace api
 	void StartI2P ()
 	{
 		i2p::log::Logger().Start ();
-		LogPrint(eLogInfo, "API: starting NetDB");
+		LogPrint(eLogInfo, "API: Starting NetDB");
 		i2p::data::netdb.Start();
-
-        bool ntcp2; i2p::config::GetOption("ntcp2.enabled", ntcp2);
-        bool ssu; i2p::config::GetOption("ssu", ssu);
-        bool checkInReserved; i2p::config::GetOption("reservedrange", checkInReserved);
-        LogPrint(eLogInfo, "API: starting Transports");
-        if(!ssu) LogPrint(eLogInfo, "API: ssu disabled");
-        if(!ntcp2) LogPrint(eLogInfo, "API: ntcp2 disabled");
-
-        i2p::transport::transports.SetCheckReserved(checkInReserved);
-        i2p::transport::transports.Start(ntcp2, ssu);
-        if (i2p::transport::transports.IsBoundSSU() || i2p::transport::transports.IsBoundNTCP2())
-            LogPrint(eLogInfo, "API: Transports started");
-        else
-        {
-            LogPrint(eLogError, "API: failed to start Transports");
-            /** shut down netdb right away */
-            i2p::transport::transports.Stop();
-            i2p::data::netdb.Stop();
-            return;
-        }
-
-        LogPrint(eLogInfo, "API: starting Tunnels");
-        i2p::tunnel::tunnels.Start();
-
-        LogPrint(eLogInfo, "API: starting Client");
-        i2p::client::context.Start ();
+		LogPrint(eLogInfo, "API: Starting Transports");
+		i2p::transport::transports.Start();
+		LogPrint(eLogInfo, "API: Starting Tunnels");
+		i2p::tunnel::tunnels.Start();
 	}
 
     void CloseAcceptsTunnels ()
@@ -349,14 +327,12 @@ namespace api
 
 	void StopI2P ()
 	{
-		LogPrint(eLogInfo, "API: shutting down");
-        LogPrint(eLogInfo, "API: stopping Client");
-        i2p::client::context.Stop();
-		LogPrint(eLogInfo, "API: stopping Tunnels");
+		LogPrint(eLogInfo, "API: Shutting down");
+		LogPrint(eLogInfo, "API: Stopping Tunnels");
 		i2p::tunnel::tunnels.Stop();
-		LogPrint(eLogInfo, "API: stopping Transports");
+		LogPrint(eLogInfo, "API: Stopping Transports");
 		i2p::transport::transports.Stop();
-		LogPrint(eLogInfo, "API: stopping NetDB");
+		LogPrint(eLogInfo, "API: Stopping NetDB");
 		i2p::data::netdb.Stop();
         i2p::crypto::TerminateCrypto ();
 		i2p::log::Logger().Stop ();
