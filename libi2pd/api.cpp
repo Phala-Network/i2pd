@@ -715,7 +715,7 @@ namespace api
         }
         else
         {
-            ident = ident_keys.GetPublic() -> GetIdentHash().ToBase32();
+            ident = ident_keys.GetPublic() -> GetIdentHash().ToBase32().append(".b32.i2p");
             f.write ((char *)buf, len);
             return 0;
         }
