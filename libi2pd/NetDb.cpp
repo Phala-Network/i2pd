@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2013-2021, The PurpleI2P Project
+* Copyright (c) 2013-2022, The PurpleI2P Project
 *
 * This file is part of Purple i2pd project and licensed under BSD3
 *
@@ -472,13 +472,13 @@ namespace data
 		i2p::transport::transports.SendMessages(ih, requests);
 	}
 
-	bool NetDb::LoadRouterInfo (const std::string & path)
+	bool NetDb::LoadRouterInfo (const std::string& path, uint64_t ts)
 	{
 		auto r = std::make_shared<RouterInfo>(path);
-		if (r->GetRouterIdentity () && !r->IsUnreachable () && r->HasValidAddresses ())
+		if (r->GetRouterIdentity () && !r->IsUnreachable () && r->HasValidAddresses () &&
+		    ts < r->GetTimestamp () + 24*60*60*NETDB_MAX_OFFLINE_EXPIRATION_TIMEOUT*1000LL)
 		{
 			r->DeleteBuffer ();
-			r->ClearProperties (); // properties are not used for regular routers
 			if (m_RouterInfos.emplace (r->GetIdentHash (), r).second)
 			{
 				if (r->IsFloodfill () && r->IsEligibleFloodfill ())
@@ -487,7 +487,7 @@ namespace data
 		}
 		else
 		{
-			LogPrint(eLogWarning, "NetDb: RI from ", path, " is invalid. Delete");
+			LogPrint(eLogWarning, "NetDb: RI from ", path, " is invalid or too old. Delete");
 			i2p::fs::Remove(path);
 		}
 		return true;
@@ -568,11 +568,11 @@ namespace data
 		m_RouterInfos.clear ();
 		m_Floodfills.clear ();
 
-		m_LastLoad = i2p::util::GetSecondsSinceEpoch();
+		uint64_t ts = i2p::util::GetMillisecondsSinceEpoch();
 		std::vector<std::string> files;
 		m_Storage.Traverse(files);
 		for (const auto& path : files)
-			LoadRouterInfo(path);
+			LoadRouterInfo (path, ts);
 
 		LogPrint (eLogInfo, "NetDb: ", m_RouterInfos.size(), " routers loaded (", m_Floodfills.size (), " floodfils)");
 	}
@@ -596,10 +596,9 @@ namespace data
 		{
 			if (it.second == own) continue; // skip own
 			std::string ident = it.second->GetIdentHashBase64();
-			std::string path  = m_Storage.Path(ident);
 			if (it.second->IsUpdated ())
 			{
-				it.second->SaveToFile (path);
+				it.second->SaveToFile (m_Storage.Path(ident));
 				it.second->SetUpdated (false);
 				it.second->SetUnreachable (false);
 				it.second->DeleteBuffer ();
@@ -630,6 +629,8 @@ namespace data
 			}
 		} // m_RouterInfos iteration
 
+		m_RouterInfoBuffersPool.CleanUpMt ();
+			
 		if (updatedCount > 0)
 			LogPrint (eLogInfo, "NetDb: Saved ", updatedCount, " new/updated routers");
 		if (deletedCount > 0)
@@ -658,7 +659,7 @@ namespace data
 					else
 						++it;
 			}
-		}
+		}	
 	}
 
 	void NetDb::RequestDestination (const IdentHash& destination, RequestedDestination::RequestComplete requestComplete, bool direct)
