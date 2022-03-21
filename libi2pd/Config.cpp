@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2013-2020, The PurpleI2P Project
+* Copyright (c) 2013-2022, The PurpleI2P Project
 *
 * This file is part of Purple i2pd project and licensed under BSD3
 *
@@ -109,6 +109,8 @@ namespace config {
 			("httpproxy.outbound.length", value<std::string>()->default_value("3"),   "HTTP proxy outbound tunnel length")
 			("httpproxy.inbound.quantity", value<std::string>()->default_value("5"),  "HTTP proxy inbound tunnels quantity")
 			("httpproxy.outbound.quantity", value<std::string>()->default_value("5"), "HTTP proxy outbound tunnels quantity")
+			("httpproxy.inbound.lengthVariance", value<std::string>()->default_value("0"),  "HTTP proxy inbound tunnels length variance")
+			("httpproxy.outbound.lengthVariance", value<std::string>()->default_value("0"), "HTTP proxy outbound tunnels length variance")
 			("httpproxy.latency.min", value<std::string>()->default_value("0"),       "HTTP proxy min latency for tunnels")
 			("httpproxy.latency.max", value<std::string>()->default_value("0"),       "HTTP proxy max latency for tunnels")
 			("httpproxy.outproxy", value<std::string>()->default_value(""),           "HTTP proxy upstream out proxy url")
@@ -130,6 +132,8 @@ namespace config {
 			("socksproxy.outbound.length", value<std::string>()->default_value("3"),   "SOCKS proxy outbound tunnel length")
 			("socksproxy.inbound.quantity", value<std::string>()->default_value("5"),  "SOCKS proxy inbound tunnels quantity")
 			("socksproxy.outbound.quantity", value<std::string>()->default_value("5"), "SOCKS proxy outbound tunnels quantity")
+			("socksproxy.inbound.lengthVariance", value<std::string>()->default_value("0"),  "SOCKS proxy inbound tunnels length variance")
+			("socksproxy.outbound.lengthVariance", value<std::string>()->default_value("0"), "SOCKS proxy outbound tunnels length variance")
 			("socksproxy.latency.min", value<std::string>()->default_value("0"),       "SOCKS proxy min latency for tunnels")
 			("socksproxy.latency.max", value<std::string>()->default_value("0"),       "SOCKS proxy max latency for tunnels")
 			("socksproxy.outproxy.enabled", value<bool>()->default_value(false),       "Enable or disable SOCKS outproxy")
@@ -203,7 +207,7 @@ namespace config {
 			("reseed.zipfile", value<std::string>()->default_value(""),   "Path to local .zip file to reseed from")
 			("reseed.proxy", value<std::string>()->default_value(""),     "url for reseed proxy, supports http/socks")
 			("reseed.urls", value<std::string>()->default_value(
-				"https://reseed.i2p-projekt.de/,"
+				"https://reseed2.i2p.net/,"
 				"https://reseed.diva.exchange/,"
 				"https://reseed-fr.i2pd.xyz/,"
 				"https://reseed.memcpy.io/,"
@@ -211,12 +215,15 @@ namespace config {
 				"https://i2pseed.creativecowpat.net:8443/,"
 				"https://reseed.i2pgit.org/,"
 				"https://i2p.novg.net/,"
-				"https://banana.incognet.io/"
+				"https://banana.incognet.io/,"
+				"https://reseed-pl.i2pd.xyz/"
 			),                                                            "Reseed URLs, separated by comma")
 			("reseed.yggurls", value<std::string>()->default_value(
 				"http://[324:71e:281a:9ed3::ace]:7070/,"
 				"http://[301:65b9:c7cd:9a36::1]:18801/,"
-				"http://[320:8936:ec1a:31f1::216]/"
+				"http://[320:8936:ec1a:31f1::216]/,"
+				"http://[306:3834:97b9:a00a::1]/,"
+				"http://[316:f9e0:f22e:a74f::216]/"
 			),                                                            "Reseed URLs through the Yggdrasil, separated by comma")
 		;
 
@@ -263,6 +270,12 @@ namespace config {
 			("ntcp2.proxy", value<std::string>()->default_value(""),       "Proxy URL for NTCP2 transport")
 		;
 
+		options_description ssu2("SSU2 Options");
+		ntcp2.add_options()
+			("ssu2.enabled", value<bool>()->default_value(false),         "Enable SSU2 (default: disabled)")
+			("ssu2.port", value<uint16_t>()->default_value(0),            "Port to listen for incoming SSU2 packets (default: auto)")
+		;
+		
 		options_description nettime("Time sync options");
 		nettime.add_options()
 			("nettime.enabled", value<bool>()->default_value(false),       "Disable time sync (default: disabled)")
@@ -271,8 +284,9 @@ namespace config {
 				"1.pool.ntp.org,"
 				"2.pool.ntp.org,"
 				"3.pool.ntp.org"
-			),                                                             "Comma separated list of NTCP servers")
+			),                                                             "Comma separated list of NTP servers")
 			("nettime.ntpsyncinterval", value<int>()->default_value(72),   "NTP sync interval in hours (default: 72)")
+			("nettime.frompeers", value<bool>()->default_value(true),      "Sync clock from transport peers (default: enabled)")
 		;
 
 		options_description persist("Network information persisting options");
@@ -312,6 +326,7 @@ namespace config {
 			.add(websocket) // deprecated
 			.add(exploratory)
 			.add(ntcp2)
+			.add(ssu2)
 			.add(nettime)
 			.add(persist)
 			.add(cpuext)

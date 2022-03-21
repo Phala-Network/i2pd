@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2013-2021, The PurpleI2P Project
+* Copyright (c) 2013-2022, The PurpleI2P Project
 *
 * This file is part of Purple i2pd project and licensed under BSD3
 *
@@ -136,7 +136,7 @@ namespace transport
 	Transports::Transports ():
 		m_IsOnline (true), m_IsRunning (false), m_IsNAT (true), m_CheckReserved(true), m_Thread (nullptr),
 		m_Service (nullptr), m_Work (nullptr), m_PeerCleanupTimer (nullptr), m_PeerTestTimer (nullptr),
-		m_SSUServer (nullptr), m_NTCP2Server (nullptr),
+		m_SSUServer (nullptr), m_SSU2Server (nullptr), m_NTCP2Server (nullptr),
 		m_X25519KeysPairSupplier (15), // 15 pre-generated keys
 		m_TotalSentBytes(0), m_TotalReceivedBytes(0), m_TotalTransitTransmittedBytes (0),
 		m_InBandwidth (0), m_OutBandwidth (0), m_TransitBandwidth(0),
@@ -157,7 +157,7 @@ namespace transport
 		}
 	}
 
-	void Transports::Start (bool enableNTCP2, bool enableSSU)
+	void Transports::Start (bool enableNTCP2, bool enableSSU, bool enableSSU2)
 	{
 		if (!m_Service)
 		{
@@ -217,7 +217,9 @@ namespace transport
 				}
 			}
 		}
-
+		// create SSU2 server
+		if (enableSSU2) m_SSU2Server = new SSU2Server ();
+		
 		// bind to interfaces
 		bool ipv4; i2p::config::GetOption("ipv4", ipv4);
 		if (ipv4)
@@ -282,7 +284,8 @@ namespace transport
 			}
 			if (m_SSUServer) DetectExternalIP ();
 		}
-
+		if (m_SSU2Server) m_SSU2Server->Start ();
+		
 		m_PeerCleanupTimer->expires_from_now (boost::posix_time::seconds(5*SESSION_CREATION_TIMEOUT));
 		m_PeerCleanupTimer->async_wait (std::bind (&Transports::HandlePeerCleanupTimer, this, std::placeholders::_1));
 
@@ -304,7 +307,14 @@ namespace transport
 			delete m_SSUServer;
 			m_SSUServer = nullptr;
 		}
-
+		
+		if (m_SSU2Server)
+		{
+			m_SSU2Server->Stop ();
+			delete m_SSU2Server;
+			m_SSU2Server = nullptr;
+		}
+		
 		if (m_NTCP2Server)
 		{
 			m_NTCP2Server->Stop ();
@@ -526,6 +536,40 @@ namespace transport
 					}
 				}
 			}
+			if (peer.numAttempts == 5 || peer.numAttempts == 6) // SSU2
+			{
+				if (m_SSU2Server)
+				{
+					std::shared_ptr<const RouterInfo::Address> address;
+					if (peer.numAttempts == 5) // SSU2 ipv6
+					{
+						if (context.GetRouterInfo ().IsSSU2V6 () && peer.router->IsReachableBy (RouterInfo::eSSU2V6))
+						{
+							address = peer.router->GetSSU2V6Address ();
+							if (address && m_CheckReserved && i2p::util::net::IsInReservedRange(address->host))
+								address = nullptr;
+						}
+						peer.numAttempts++;
+					}
+					if (!address && peer.numAttempts == 6) // SSU2 ipv4
+					{
+						if (context.GetRouterInfo ().IsSSU2V4 () && peer.router->IsReachableBy (RouterInfo::eSSU2V4))
+						{
+							address = peer.router->GetSSU2V4Address ();
+							if (address && m_CheckReserved && i2p::util::net::IsInReservedRange(address->host))
+								address = nullptr;
+						}
+						peer.numAttempts++;
+					}
+					if (address && address->published)
+					{
+						if (m_SSU2Server->CreateSession (peer.router, address))
+							return true;
+					}
+				}
+				else
+					peer.numAttempts += 2;
+			}	
 			LogPrint (eLogInfo, "Transports: No compatble NTCP2 or SSU addresses available");
 			i2p::data::netdb.SetUnreachable (ident, true); // we are here because all connection attempts failed
 			peer.Done ();
@@ -588,6 +632,7 @@ namespace transport
 		{
 			LogPrint (eLogInfo, "Transports: Started peer test IPv4");
 			std::set<i2p::data::IdentHash> excluded;
+			excluded.insert (i2p::context.GetIdentHash ()); // don't pick own router
 			bool statusChanged = false;
 			for (int i = 0; i < 5; i++)
 			{
@@ -614,6 +659,7 @@ namespace transport
 		{
 			LogPrint (eLogInfo, "Transports: Started peer test IPv6");
 			std::set<i2p::data::IdentHash> excluded;
+			excluded.insert (i2p::context.GetIdentHash ()); // don't pick own router
 			bool statusChanged = false;
 			for (int i = 0; i < 5; i++)
 			{

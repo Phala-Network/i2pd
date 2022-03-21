@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2013-2020, The PurpleI2P Project
+* Copyright (c) 2013-2022, The PurpleI2P Project
 *
 * This file is part of Purple i2pd project and licensed under BSD3
 *
@@ -61,6 +61,15 @@ namespace client
 		eI2CPMessageStatusNoLeaseSet = 21
 	};
 
+	enum I2CPSessionStatus
+	{
+		eI2CPSessionStatusDestroyed = 0,
+		eI2CPSessionStatusCreated = 1,
+		eI2CPSessionStatusUpdated = 2,
+		eI2CPSessionStatusInvalid = 3,
+		eI2CPSessionStatusRefused = 4
+	};
+	
 	// params
 	const char I2CP_PARAM_MESSAGE_RELIABILITY[] = "i2cp.messageReliability";
 
@@ -113,6 +122,7 @@ namespace client
 			uint64_t m_LeaseSetExpirationTime;
 			bool m_IsCreatingLeaseSet;
 			boost::asio::deadline_timer m_LeaseSetCreationTimer;
+			i2p::util::MemoryPoolMt<I2NPMessageBuffer<I2NP_MAX_MESSAGE_SIZE> > m_I2NPMsgsPool;
 	};
 
 	class RunnableI2CPDestination: private i2p::util::RunnableService, public I2CPDestination
@@ -132,13 +142,7 @@ namespace client
 	{
 		public:
 
-#ifdef ANDROID
-			typedef boost::asio::local::stream_protocol proto;
-#else
-			typedef boost::asio::ip::tcp proto;
-#endif
-
-			I2CPSession (I2CPServer& owner, std::shared_ptr<proto::socket> socket);
+			I2CPSession (I2CPServer& owner, std::shared_ptr<boost::asio::ip::tcp::socket> socket);
 
 			~I2CPSession ();
 
@@ -180,13 +184,13 @@ namespace client
 			std::string ExtractString (const uint8_t * buf, size_t len);
 			size_t PutString (uint8_t * buf, size_t len, const std::string& str);
 			void ExtractMapping (const uint8_t * buf, size_t len, std::map<std::string, std::string>& mapping);
-			void SendSessionStatusMessage (uint8_t status);
+			void SendSessionStatusMessage (I2CPSessionStatus status);
 			void SendHostReplyMessage (uint32_t requestID, std::shared_ptr<const i2p::data::IdentityEx> identity);
 
 		private:
 
 			I2CPServer& m_Owner;
-			std::shared_ptr<proto::socket> m_Socket;
+			std::shared_ptr<boost::asio::ip::tcp::socket> m_Socket;
 			uint8_t m_Header[I2CP_HEADER_SIZE], m_Payload[I2CP_MAX_MESSAGE_LENGTH];
 			size_t m_PayloadLen;
 
@@ -216,6 +220,7 @@ namespace client
 
 			bool InsertSession (std::shared_ptr<I2CPSession> session);
 			void RemoveSession (uint16_t sessionID);
+			std::shared_ptr<I2CPSession> FindSessionByIdentHash (const i2p::data::IdentHash& ident) const;
 
 		private:
 
@@ -223,7 +228,7 @@ namespace client
 
 			void Accept ();
 
-			void HandleAccept(const boost::system::error_code& ecode, std::shared_ptr<I2CPSession::proto::socket> socket);
+			void HandleAccept(const boost::system::error_code& ecode, std::shared_ptr<boost::asio::ip::tcp::socket> socket);
 
 		private:
 
@@ -231,7 +236,7 @@ namespace client
 			I2CPMessageHandler m_MessagesHandlers[256];
 			std::map<uint16_t, std::shared_ptr<I2CPSession> > m_Sessions;
 
-			I2CPSession::proto::acceptor m_Acceptor;
+			boost::asio::ip::tcp::acceptor m_Acceptor;
 
 		public:
 

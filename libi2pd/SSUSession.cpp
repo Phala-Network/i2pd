@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2013-2021, The PurpleI2P Project
+* Copyright (c) 2013-2022, The PurpleI2P Project
 *
 * This file is part of Purple i2pd project and licensed under BSD3
 *
@@ -31,7 +31,7 @@ namespace transport
 		{
 			// we are client
 			auto address = IsV6 () ? router->GetSSUV6Address () : router->GetSSUAddress (true);
-			if (address) m_IntroKey = address->ssu->key;
+			if (address) m_IntroKey = address->i;
 			m_Data.AdjustPacketSize (router); // mtu
 		}
 		else
@@ -39,7 +39,7 @@ namespace transport
 			// we are server
 			auto address = IsV6 () ? i2p::context.GetRouterInfo ().GetSSUV6Address () :
 				i2p::context.GetRouterInfo ().GetSSUAddress (true);
-			if (address) m_IntroKey = address->ssu->key;
+			if (address) m_IntroKey = address->i;
 		}
 		m_CreationTime = i2p::util::GetSecondsSinceEpoch ();
 	}
@@ -127,8 +127,8 @@ namespace transport
 						LogPrint (eLogInfo, "SSU: SSU is not supported");
 						return;
 					}
-					if (Validate (buf, len, address->ssu->key))
-						Decrypt (buf, len, address->ssu->key);
+					if (Validate (buf, len, address->i))
+						Decrypt (buf, len, address->i);
 					else
 					{
 						LogPrint (eLogWarning, "SSU: MAC verification failed ", len, " bytes from ", senderEndpoint);
@@ -274,16 +274,7 @@ namespace transport
 		s.Insert (payload, 8); // relayTag and signed on time
 		m_RelayTag = bufbe32toh (payload);
 		payload += 4; // relayTag
-		if (ourIP.is_v4 () && i2p::context.GetStatus () == eRouterStatusTesting)
-		{
-			auto ts = i2p::util::GetSecondsSinceEpoch ();
-			uint32_t signedOnTime = bufbe32toh(payload);
-			if (signedOnTime < ts - SSU_CLOCK_SKEW || signedOnTime > ts + SSU_CLOCK_SKEW)
-			{
-				LogPrint (eLogError, "SSU: Clock skew detected ", (int)ts - signedOnTime, ". Check your clock");
-				i2p::context.SetError (eRouterErrorClockSkew);
-			}
-		}
+		uint32_t signedOnTime = bufbe32toh(payload);
 		payload += 4; // signed on time
 		// decrypt signature
 		size_t signatureLen = m_RemoteIdentity->GetSignatureLen ();
@@ -295,6 +286,24 @@ namespace transport
 		// verify signature
 		if (s.Verify (m_RemoteIdentity, payload))
 		{
+			if (ourIP.is_v4 () && i2p::context.GetStatus () == eRouterStatusTesting)
+			{
+				auto ts = i2p::util::GetSecondsSinceEpoch ();
+				int offset = (int)ts - signedOnTime;
+				if (m_Server.IsSyncClockFromPeers ())
+				{
+					if (std::abs (offset) > SSU_CLOCK_THRESHOLD)
+					{
+						LogPrint (eLogWarning, "SSU: Clock adjusted by ", -offset, " seconds");
+						i2p::util::AdjustTimeOffset (-offset);
+					}	
+				}	
+				else if (std::abs (offset) > SSU_CLOCK_SKEW)
+				{
+					LogPrint (eLogError, "SSU: Clock skew detected ", offset, ". Check your clock");
+					i2p::context.SetError (eRouterErrorClockSkew);
+				}
+			}
 			LogPrint (eLogInfo, "SSU: Our external address is ", ourIP.to_string (), ":", ourPort);
 			if (!i2p::util::net::IsInReservedRange (ourIP))
 			{
@@ -427,7 +436,7 @@ namespace transport
 		payload += 2;
 		*payload = 0; // challenge
 		payload++;
-		memcpy (payload, (const uint8_t *)address->ssu->key, 32);
+		memcpy (payload, (const uint8_t *)address->i, 32);
 		payload += 32;
 		htobe32buf (payload, nonce); // nonce
 
@@ -1174,7 +1183,7 @@ namespace transport
 			auto addr = address.is_v4 () ? i2p::context.GetRouterInfo ().GetSSUAddress (true) : // ipv4
 				i2p::context.GetRouterInfo ().GetSSUV6Address ();
 			if (addr)
-				memcpy (payload, addr->ssu->key, 32); // intro key
+				memcpy (payload, addr->i, 32); // intro key
 			else
 				LogPrint (eLogInfo, "SSU: SSU is not supported. Can't send peer test");
 		}
@@ -1213,7 +1222,7 @@ namespace transport
 		if (!nonce) nonce = 1;
 		m_IsPeerTest = false;
 		m_Server.NewPeerTest (nonce, ePeerTestParticipantAlice1, shared_from_this ());
-		SendPeerTest (nonce, boost::asio::ip::address(), 0, address->ssu->key, false, false); // address and port always zero for Alice
+		SendPeerTest (nonce, boost::asio::ip::address(), 0, address->i, false, false); // address and port always zero for Alice
 	}
 
 	void SSUSession::SendKeepAlive ()

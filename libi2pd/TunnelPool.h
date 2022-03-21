@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2013-2021, The PurpleI2P Project
+* Copyright (c) 2013-2022, The PurpleI2P Project
 *
 * This file is part of Purple i2pd project and licensed under BSD3
 *
@@ -61,7 +61,8 @@ namespace tunnel
 	{
 		public:
 
-			TunnelPool (int numInboundHops, int numOutboundHops, int numInboundTunnels, int numOutboundTunnels);
+			TunnelPool (int numInboundHops, int numOutboundHops, int numInboundTunnels, 
+				int numOutboundTunnels, int inboundVariance, int outboundVariance);
 			~TunnelPool ();
 
 			std::shared_ptr<i2p::garlic::GarlicDestination> GetLocalDestination () const { return m_LocalDestination; };
@@ -81,7 +82,6 @@ namespace tunnel
 			std::shared_ptr<InboundTunnel> GetNextInboundTunnel (std::shared_ptr<InboundTunnel> excluded = nullptr,
 				i2p::data::RouterInfo::CompatibleTransports compatible = i2p::data::RouterInfo::eAllTransports) const;
 			std::shared_ptr<OutboundTunnel> GetNewOutboundTunnel (std::shared_ptr<OutboundTunnel> old) const;
-			void TestTunnels ();
 			void ManageTunnels (uint64_t ts);
 			void ProcessGarlicMessage (std::shared_ptr<I2NPMessage> msg);
 			void ProcessDeliveryStatus (std::shared_ptr<I2NPMessage> msg);
@@ -118,6 +118,7 @@ namespace tunnel
 
 		private:
 
+			void TestTunnels ();
 			void CreateInboundTunnel ();
 			void CreateOutboundTunnel ();
 			void CreatePairedInboundTunnel (std::shared_ptr<OutboundTunnel> outboundTunnel);
@@ -130,7 +131,8 @@ namespace tunnel
 		private:
 
 			std::shared_ptr<i2p::garlic::GarlicDestination> m_LocalDestination;
-			int m_NumInboundHops, m_NumOutboundHops, m_NumInboundTunnels, m_NumOutboundTunnels;
+			int m_NumInboundHops, m_NumOutboundHops, m_NumInboundTunnels, m_NumOutboundTunnels, 
+				m_InboundVariance, m_OutboundVariance;
 			std::shared_ptr<std::vector<i2p::data::IdentHash> > m_ExplicitPeers;
 			mutable std::mutex m_InboundTunnelsMutex;
 			std::set<std::shared_ptr<InboundTunnel>, TunnelCreationTimeCmp> m_InboundTunnels; // recent tunnel appears first

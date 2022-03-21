@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2013-2021, The PurpleI2P Project
+* Copyright (c) 2013-2022, The PurpleI2P Project
 *
 * This file is part of Purple i2pd project and licensed under BSD3
 *
@@ -318,11 +318,13 @@ namespace crypto
 		uint8_t m_H[32] /*h*/, m_CK[64] /*[ck, k]*/;
 
 		void MixHash (const uint8_t * buf, size_t len);
+		void MixHash (const std::vector<std::pair<uint8_t *, size_t> >& bufs);
 		void MixKey (const uint8_t * sharedSecret);
 	};
 
 	void InitNoiseNState (NoiseSymmetricState& state, const uint8_t * pub); // Noise_N (tunnels, router)
 	void InitNoiseXKState (NoiseSymmetricState& state, const uint8_t * pub); // Noise_XK (NTCP2)
+	void InitNoiseXKState1 (NoiseSymmetricState& state, const uint8_t * pub); // Noise_XK (SSU2)
 	void InitNoiseIKState (NoiseSymmetricState& state, const uint8_t * pub); // Noise_IK (ratchets)
 
 // init and terminate

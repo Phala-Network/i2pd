@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2013-2021, The PurpleI2P Project
+* Copyright (c) 2013-2022, The PurpleI2P Project
 *
 * This file is part of Purple i2pd project and licensed under BSD3
 *
@@ -35,6 +35,8 @@ namespace client
 		int inQty   = DEFAULT_INBOUND_TUNNELS_QUANTITY;
 		int outLen  = DEFAULT_OUTBOUND_TUNNEL_LENGTH;
 		int outQty  = DEFAULT_OUTBOUND_TUNNELS_QUANTITY;
+		int inVar   = DEFAULT_INBOUND_TUNNELS_LENGTH_VARIANCE;
+		int outVar  = DEFAULT_OUTBOUND_TUNNELS_LENGTH_VARIANCE;	
 		int numTags = DEFAULT_TAGS_TO_SEND;
 		std::shared_ptr<std::vector<i2p::data::IdentHash> > explicitPeers;
 		try
@@ -53,6 +55,12 @@ namespace client
 				it = params->find (I2CP_PARAM_OUTBOUND_TUNNELS_QUANTITY);
 				if (it != params->end ())
 					outQty = std::stoi(it->second);
+				it = params->find (I2CP_PARAM_INBOUND_TUNNELS_LENGTH_VARIANCE);
+				if (it != params->end ())
+					inVar = std::stoi(it->second);
+				it = params->find (I2CP_PARAM_OUTBOUND_TUNNELS_LENGTH_VARIANCE);
+				if (it != params->end ())
+					outVar = std::stoi(it->second);
 				it = params->find (I2CP_PARAM_TAGS_TO_SEND);
 				if (it != params->end ())
 					numTags = std::stoi(it->second);
@@ -123,7 +131,7 @@ namespace client
 			LogPrint(eLogError, "Destination: Unable to parse parameters for destination: ", ex.what());
 		}
 		SetNumTags (numTags);
-		m_Pool = i2p::tunnel::tunnels.CreateTunnelPool (inLen, outLen, inQty, outQty);
+		m_Pool = i2p::tunnel::tunnels.CreateTunnelPool (inLen, outLen, inQty, outQty, inVar, outVar);
 		if (explicitPeers)
 			m_Pool->SetExplicitPeers (explicitPeers);
 		if(params)
@@ -555,25 +563,45 @@ namespace client
 				shared_from_this (), std::placeholders::_1));
 			return;
 		}
+		if (!m_Pool->GetInboundTunnels ().size () || !m_Pool->GetOutboundTunnels ().size ())
+		{
+			LogPrint (eLogError, "Destination: Can't publish LeaseSet. Destination is not ready");
+			return;
+		}
 		auto floodfill = i2p::data::netdb.GetClosestFloodfill (leaseSet->GetIdentHash (), m_ExcludedFloodfills);
 		if (!floodfill)
 		{
 			LogPrint (eLogError, "Destination: Can't publish LeaseSet, no more floodfills found");
 			m_ExcludedFloodfills.clear ();
 			return;
-		}
+		}	
 		auto outbound = m_Pool->GetNextOutboundTunnel (nullptr, floodfill->GetCompatibleTransports (false));
-		if (!outbound)
-		{
-			LogPrint (eLogError, "Destination: Can't publish LeaseSet. No outbound tunnels");
-			return;
-		}
 		auto inbound = m_Pool->GetNextInboundTunnel (nullptr, floodfill->GetCompatibleTransports (true));
-		if (!inbound)
+		if (!outbound || !inbound)
 		{
-			LogPrint (eLogError, "Destination: Can't publish LeaseSet. No inbound tunnels");
-			return;
-		}
+			LogPrint (eLogInfo, "Destination: No compatible tunnels with ", floodfill->GetIdentHash ().ToBase64 (), ". Trying another floodfill");
+			m_ExcludedFloodfills.insert (floodfill->GetIdentHash ());
+			floodfill = i2p::data::netdb.GetClosestFloodfill (leaseSet->GetIdentHash (), m_ExcludedFloodfills);
+			if (floodfill)
+			{
+				outbound = m_Pool->GetNextOutboundTunnel (nullptr, floodfill->GetCompatibleTransports (false));
+				if (outbound)
+				{	
+					inbound = m_Pool->GetNextInboundTunnel (nullptr, floodfill->GetCompatibleTransports (true));
+					if (!inbound)
+						LogPrint (eLogError, "Destination: Can't publish LeaseSet. No inbound tunnels");
+				}	
+				else
+					LogPrint (eLogError, "Destination: Can't publish LeaseSet. No outbound tunnels");
+			}	
+			else
+				LogPrint (eLogError, "Destination: Can't publish LeaseSet, no more floodfills found");
+			if (!floodfill || !outbound || !inbound)
+			{
+				m_ExcludedFloodfills.clear ();
+				return;
+			}	
+		}	
 		m_ExcludedFloodfills.insert (floodfill->GetIdentHash ());
 		LogPrint (eLogDebug, "Destination: Publish LeaseSet of ", GetIdentHash ().ToBase32 ());
 		RAND_bytes ((uint8_t *)&m_PublishReplyToken, 4);

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2013-2021, The PurpleI2P Project
+* Copyright (c) 2013-2022, The PurpleI2P Project
 *
 * This file is part of Purple i2pd project and licensed under BSD3
 *
@@ -146,7 +146,7 @@ namespace client
 
 	void I2CPDestination::SendMsgTo (const uint8_t * payload, size_t len, const i2p::data::IdentHash& ident, uint32_t nonce)
 	{
-		auto msg = NewI2NPMessage ();
+		auto msg = m_I2NPMsgsPool.AcquireSharedMt ();
 		uint8_t * buf = msg->GetPayload ();
 		htobe32buf (buf, len);
 		memcpy (buf + 4, payload, len);
@@ -204,10 +204,16 @@ namespace client
 		}
 		else
 		{
-			outboundTunnel = GetTunnelPool ()->GetNextOutboundTunnel ();
-			auto leases = remote->GetNonExpiredLeases ();
+			auto leases = remote->GetNonExpiredLeases (false); // without threshold
+			if (leases.empty ())
+				leases = remote->GetNonExpiredLeases (true); // with threshold
 			if (!leases.empty ())
+			{	
 				remoteLease = leases[rand () % leases.size ()];
+				auto leaseRouter = i2p::data::netdb.FindRouter (remoteLease->tunnelGateway);
+				outboundTunnel = GetTunnelPool ()->GetNextOutboundTunnel (nullptr,
+					leaseRouter ? leaseRouter->GetCompatibleTransports (false) : (i2p::data::RouterInfo::CompatibleTransports)i2p::data::RouterInfo::eAllTransports);
+			}	
 			if (remoteLease && outboundTunnel)
 				remoteSession->SetSharedRoutingPath (std::make_shared<i2p::garlic::GarlicRoutingPath> (
 					i2p::garlic::GarlicRoutingPath{outboundTunnel, remoteLease, 10000, 0, 0})); // 10 secs RTT
@@ -268,7 +274,7 @@ namespace client
 		}
 	}
 
-	I2CPSession::I2CPSession (I2CPServer& owner, std::shared_ptr<proto::socket> socket):
+	I2CPSession::I2CPSession (I2CPServer& owner, std::shared_ptr<boost::asio::ip::tcp::socket> socket):
 		m_Owner (owner), m_Socket (socket), m_SessionID (0xFFFF),
 		m_MessageID (0), m_IsSendAccepted (true), m_IsSending (false)
 	{
@@ -519,21 +525,26 @@ namespace client
 	void I2CPSession::CreateSessionMessageHandler (const uint8_t * buf, size_t len)
 	{
 		RAND_bytes ((uint8_t *)&m_SessionID, 2);
-		m_Owner.InsertSession (shared_from_this ());
 		auto identity = std::make_shared<i2p::data::IdentityEx>();
 		size_t offset = identity->FromBuffer (buf, len);
 		if (!offset)
 		{
 			LogPrint (eLogError, "I2CP: Create session malformed identity");
-			SendSessionStatusMessage (3); // invalid
+			SendSessionStatusMessage (eI2CPSessionStatusInvalid); // invalid
 			return;
 		}
+		if (m_Owner.FindSessionByIdentHash (identity->GetIdentHash ()))
+		{
+			LogPrint (eLogError, "I2CP: Create session duplicate address ", identity->GetIdentHash ().ToBase32 ());
+			SendSessionStatusMessage (eI2CPSessionStatusInvalid); // invalid
+			return;
+		}	
 		uint16_t optionsSize = bufbe16toh (buf + offset);
 		offset += 2;
 		if (optionsSize > len - offset)
 		{
 			LogPrint (eLogError, "I2CP: Options size ", optionsSize, "exceeds message size");
-			SendSessionStatusMessage (3); // invalid
+			SendSessionStatusMessage (eI2CPSessionStatusInvalid); // invalid
 			return;
 		}
 		std::map<std::string, std::string> params;
@@ -549,33 +560,41 @@ namespace client
 				m_Destination = m_Owner.IsSingleThread () ?
 					std::make_shared<I2CPDestination>(m_Owner.GetService (), shared_from_this (), identity, true, params):
 					std::make_shared<RunnableI2CPDestination>(shared_from_this (), identity, true, params);
-				SendSessionStatusMessage (1); // created
-				LogPrint (eLogDebug, "I2CP: Session ", m_SessionID, " created");
-				m_Destination->Start ();
+				if (m_Owner.InsertSession (shared_from_this ()))
+				{		
+					SendSessionStatusMessage (eI2CPSessionStatusCreated); // created
+					LogPrint (eLogDebug, "I2CP: Session ", m_SessionID, " created");
+					m_Destination->Start ();
+				}	
+				else
+				{
+					LogPrint (eLogError, "I2CP: Session already exists");
+					SendSessionStatusMessage (eI2CPSessionStatusRefused);
+				}	
 			}
 			else
 			{
 				LogPrint (eLogError, "I2CP: Session already exists");
-				SendSessionStatusMessage (4); // refused
+				SendSessionStatusMessage (eI2CPSessionStatusRefused); // refused
 			}
 		}
 		else
 		{
 			LogPrint (eLogError, "I2CP: Create session signature verification failed");
-			SendSessionStatusMessage (3); // invalid
+			SendSessionStatusMessage (eI2CPSessionStatusInvalid); // invalid
 		}
 	}
 
 	void I2CPSession::DestroySessionMessageHandler (const uint8_t * buf, size_t len)
 	{
-		SendSessionStatusMessage (0); // destroy
+		SendSessionStatusMessage (eI2CPSessionStatusDestroyed); // destroy
 		LogPrint (eLogDebug, "I2CP: Session ", m_SessionID, " destroyed");
 		Terminate ();
 	}
 
 	void I2CPSession::ReconfigureSessionMessageHandler (const uint8_t * buf, size_t len)
 	{
-		uint8_t status = 3; // rejected
+		I2CPSessionStatus status = eI2CPSessionStatusInvalid; // rejected
 		if(len > sizeof(uint16_t))
 		{
 			uint16_t sessionID = bufbe16toh(buf);
@@ -605,7 +624,7 @@ namespace client
 								if(m_Destination->Reconfigure(opts))
 								{
 									LogPrint(eLogInfo, "I2CP: Reconfigured destination");
-									status = 2; // updated
+									status = eI2CPSessionStatusUpdated; // updated
 								}
 								else
 									LogPrint(eLogWarning, "I2CP: Failed to reconfigure destination");
@@ -630,11 +649,11 @@ namespace client
 		SendSessionStatusMessage (status);
 	}
 
-	void I2CPSession::SendSessionStatusMessage (uint8_t status)
+	void I2CPSession::SendSessionStatusMessage (I2CPSessionStatus status)
 	{
 		uint8_t buf[3];
 		htobe16buf (buf, m_SessionID);
-		buf[2] = status;
+		buf[2] = (uint8_t)status;
 		SendI2CPMessage (I2CP_SESSION_STATUS_MESSAGE, buf, 3);
 	}
 
@@ -920,11 +939,7 @@ namespace client
 	I2CPServer::I2CPServer (const std::string& interface, int port, bool isSingleThread):
 		RunnableService ("I2CP"), m_IsSingleThread (isSingleThread),
 		m_Acceptor (GetIOService (),
-#ifdef ANDROID
-			I2CPSession::proto::endpoint(std::string (1, '\0') + interface)) // leading 0 for abstract address
-#else
-			I2CPSession::proto::endpoint(boost::asio::ip::address::from_string(interface), port))
-#endif
+		boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(interface), port))
 	{
 		memset (m_MessagesHandlers, 0, sizeof (m_MessagesHandlers));
 		m_MessagesHandlers[I2CP_GET_DATE_MESSAGE] = &I2CPSession::GetDateMessageHandler;
@@ -966,13 +981,13 @@ namespace client
 
 	void I2CPServer::Accept ()
 	{
-		auto newSocket = std::make_shared<I2CPSession::proto::socket> (GetIOService ());
+		auto newSocket = std::make_shared<boost::asio::ip::tcp::socket> (GetIOService ());
 		m_Acceptor.async_accept (*newSocket, std::bind (&I2CPServer::HandleAccept, this,
 			std::placeholders::_1, newSocket));
 	}
 
 	void I2CPServer::HandleAccept(const boost::system::error_code& ecode,
-		std::shared_ptr<I2CPSession::proto::socket> socket)
+		std::shared_ptr<boost::asio::ip::tcp::socket> socket)
 	{
 		if (!ecode && socket)
 		{
@@ -1009,5 +1024,19 @@ namespace client
 	{
 		m_Sessions.erase (sessionID);
 	}
+
+	std::shared_ptr<I2CPSession> I2CPServer::FindSessionByIdentHash (const i2p::data::IdentHash& ident) const
+	{
+		for (const auto& it: m_Sessions)
+		{
+			if (it.second)
+			{	
+				auto dest = it.second->GetDestination ();
+				if (dest && dest->GetIdentHash () == ident)
+					return it.second;
+			}	
+		}
+		return nullptr;
+	}	
 }
 }
