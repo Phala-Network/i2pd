@@ -316,6 +316,7 @@ namespace api
 		i2p::data::netdb.Start();
 
         bool ntcp2; i2p::config::GetOption("ntcp2.enabled", ntcp2);
+        bool ssu2; i2p::config::GetOption("ssu2.enabled", ssu2);
         bool ssu; i2p::config::GetOption("ssu", ssu);
         bool checkInReserved; i2p::config::GetOption("reservedrange", checkInReserved);
         LogPrint(eLogInfo, "API: starting Transports");
@@ -323,7 +324,7 @@ namespace api
         if(!ntcp2) LogPrint(eLogInfo, "API: ntcp2 disabled");
 
         i2p::transport::transports.SetCheckReserved(checkInReserved);
-        i2p::transport::transports.Start(ntcp2, ssu);
+        i2p::transport::transports.Start(ntcp2, ssu, ssu2);
         if (i2p::transport::transports.IsBoundSSU() || i2p::transport::transports.IsBoundNTCP2())
             LogPrint(eLogInfo, "API: Transports started");
         else
