@@ -14,6 +14,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stddef.h>
 
 // initialization start and stop
 void C_InitI2P (int argc, char argv[], const char * appName);
@@ -24,7 +25,7 @@ void C_CloseAcceptsTunnels ();
 void C_StopI2P ();
 void C_RunPeerTest (); // should be called after UPnP
 // fetch status
-const char * C_GetNetworkStatus ();
+int C_GetNetworkStatus (char* buf, size_t buf_len);
 int C_GetTunnelCreationSuccessRate ();
 uint64_t C_GetReceivedByte ();
 uint32_t C_GetInBandwidth ();
@@ -40,19 +41,19 @@ int C_IsI2CPEnabled ();
 // fetch tunnels info
 int C_GetClientTunnelsCount ();
 int C_GetServerTunnelsCount ();
-const char * C_GetClientTunnelsName (int index);
-const char * C_GetClientTunnelsIdent (int index);
-const char * C_GetHTTPProxyIdent ();
-const char * C_GetSOCKSProxyIdent ();
-const char * C_GetServerTunnelsName (int index);
-const char * C_GetServerTunnelsIdent (int index);
+int C_GetClientTunnelsName (int index, char* buf, size_t buf_len);
+int C_GetClientTunnelsIdent (int index, char* buf, size_t buf_len);
+int C_GetHTTPProxyIdent (char* buf, size_t buf_len);
+int C_GetSOCKSProxyIdent (char* buf, size_t buf_len);
+int C_GetServerTunnelsName (int index, char* buf, size_t buf_len);
+int C_GetServerTunnelsIdent (int index, char* buf, size_t buf_len);
 
 int C_GetInboundTunnelsCount ();
 int C_GetOutboundTunnelsCount ();
-const char * C_GetInboundTunnelsFormattedInfo (int index);
-const char * C_GetOutboundTunnelsFormattedInfo (int index);
+int C_GetInboundTunnelsFormattedInfo (int index, char* buf, size_t buf_len);
+int C_GetOutboundTunnelsFormattedInfo (int index, char* buf, size_t buf_len);
 // key related
-const char * C_GenerateIdentToFile (const char * filename, const char * sk, uint16_t sigType, uint16_t cryptoType);
+int C_GenerateIdentToFile (const char * filename, const char * sk, uint16_t sigType, uint16_t cryptoType, char* buf, size_t buf_len);
 
 #ifdef __cplusplus
 }
