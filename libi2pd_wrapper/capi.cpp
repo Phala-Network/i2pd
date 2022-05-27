@@ -13,8 +13,6 @@
 #include <string.h>
 #include <assert.h>
 
-static std::string RET_STR;
-
 // Uses the example from: https://stackoverflow.com/a/9210560
 // See also https://stackoverflow.com/questions/9210528/split-string-with-delimiters-in-c/9210560#
 // Does not handle consecutive delimiters, this is only for passing
@@ -101,10 +99,11 @@ void C_RunPeerTest ()
 
 int C_GetNetworkStatus (char* buf, size_t buf_len)
 {
-    int ret = i2p::api::GetNetworkStatus(RET_STR);
+    std::string ret_str;
+    int ret = i2p::api::GetNetworkStatus(ret_str);
     if (ret == 0)
     {
-        strncpy(buf, RET_STR.c_str(), buf_len);
+        snprintf(buf, buf_len, "%s", ret_str.c_str())
     }
     return ret;
 }
@@ -197,10 +196,11 @@ int C_GetClientTunnelsName (int index, char* buf, size_t buf_len)
 {
     if (index < C_GetClientTunnelsCount())
     {
-        int ret = i2p::api::GetClientTunnelsName(RET_STR, index);
+        std::string ret_str;
+        int ret = i2p::api::GetClientTunnelsName(ret_str, index);
         if (ret == 0)
         {
-            strncpy(buf, RET_STR.c_str(), buf_len);
+            snprintf(buf, buf_len, "%s", ret_str.c_str())
         }
         return ret;
     }
@@ -211,10 +211,11 @@ int C_GetClientTunnelsIdent (int index, char* buf, size_t buf_len)
 {
     if (index < C_GetClientTunnelsCount())
     {
-        int ret = i2p::api::GetClientTunnelsIdent(RET_STR, index);
+        std::string ret_str;
+        int ret = i2p::api::GetClientTunnelsIdent(ret_str, index);
         if (ret == 0)
         {
-            strncpy(buf, RET_STR.c_str(), buf_len);
+            snprintf(buf, buf_len, "%s", ret_str.c_str())
         }
         return ret;
     }
@@ -223,20 +224,22 @@ int C_GetClientTunnelsIdent (int index, char* buf, size_t buf_len)
 
 int C_GetHTTPProxyIdent (char* buf, size_t buf_len)
 {
-    int ret = i2p::api::GetHTTPProxyIdent(RET_STR);
+    std::string ret_str;
+    int ret = i2p::api::GetHTTPProxyIdent(ret_str);
     if (ret == 0)
     {
-        strncpy(buf, RET_STR.c_str(), buf_len);
+        snprintf(buf, buf_len, "%s", ret_str.c_str())
     }
     return ret;
 }
 
 int C_GetSOCKSProxyIdent (char* buf, size_t buf_len)
 {
-    int ret = i2p::api::GetSOCKSProxyIdent(RET_STR);
+    std::string ret_str;
+    int ret = i2p::api::GetSOCKSProxyIdent(ret_str);
     if (ret == 0)
     {
-        strncpy(buf, RET_STR.c_str(), buf_len);
+        snprintf(buf, buf_len, "%s", ret_str.c_str())
     }
     return ret;
 }
@@ -245,10 +248,11 @@ int C_GetServerTunnelsName (int index, char* buf, size_t buf_len)
 {
     if (index < C_GetServerTunnelsCount())
     {
-        int ret = i2p::api::GetServerTunnelsName(RET_STR, index);
+        std::string ret_str;
+        int ret = i2p::api::GetServerTunnelsName(ret_str, index);
         if (ret == 0)
         {
-            strncpy(buf, RET_STR.c_str(), buf_len);
+            snprintf(buf, buf_len, "%s", ret_str.c_str())
         }
         return ret;
     }
@@ -259,10 +263,11 @@ int C_GetServerTunnelsIdent (int index, char* buf, size_t buf_len)
 {
     if (index < C_GetServerTunnelsCount())
     {
-        int ret = i2p::api::GetServerTunnelsIdent(RET_STR, index);
+        std::string ret_str;
+        int ret = i2p::api::GetServerTunnelsIdent(ret_str, index);
         if (ret == 0)
         {
-            strncpy(buf, RET_STR.c_str(), buf_len);
+            snprintf(buf, buf_len, "%s", ret_str.c_str())
         }
         return ret;
     }
@@ -285,10 +290,11 @@ int C_GetInboundTunnelsFormattedInfo (int index, char* buf, size_t buf_len)
 {
     if (index < C_GetInboundTunnelsCount())
     {
-        int ret = i2p::api::GetInboundTunnelsFormattedInfo(RET_STR, index);
+        std::string ret_str;
+        int ret = i2p::api::GetInboundTunnelsFormattedInfo(ret_str, index);
         if (ret == 0)
         {
-            strncpy(buf, RET_STR.c_str(), buf_len);
+            snprintf(buf, buf_len, "%s", ret_str.c_str())
         }
         return ret;
     }
@@ -299,10 +305,11 @@ int C_GetOutboundTunnelsFormattedInfo (int index, char* buf, size_t buf_len)
 {
     if (index < C_GetOutboundTunnelsCount())
     {
-        int ret = i2p::api::GetOutboundTunnelsFormattedInfo(RET_STR, index);
+        std::string ret_str;
+        int ret = i2p::api::GetOutboundTunnelsFormattedInfo(ret_str, index);
         if (ret == 0)
         {
-            strncpy(buf, RET_STR.c_str(), buf_len);
+            snprintf(buf, buf_len, "%s", ret_str.c_str())
         }
         return ret;
     }
@@ -315,10 +322,11 @@ int C_GenerateIdentToFile (const char * filename, const char * sk, uint16_t sigT
     uint8_t uint_sk[SK_LENGTH];
     memcpy(uint_sk, sk, SK_LENGTH);
     std::string str_filename(filename);
-    int ret = i2p::api::GenerateIdentToFile(RET_STR, str_filename, uint_sk, sigType, cryptoType);
+    std::string ret_str;
+    int ret = i2p::api::GenerateIdentToFile(ret_str, str_filename, uint_sk, sigType, cryptoType);
     if (ret == 0)
     {
-        strncpy(buf, RET_STR.c_str(), buf_len);
+        snprintf(buf, buf_len, "%s", ret_str.c_str())
     }
     return ret;
 }
