@@ -103,7 +103,7 @@ int C_GetNetworkStatus (char* buf, size_t buf_len)
     int ret = i2p::api::GetNetworkStatus(ret_str);
     if (ret == 0)
     {
-        snprintf(buf, buf_len, "%s", ret_str.c_str())
+        snprintf(buf, buf_len, "%s", ret_str.c_str());
     }
     return ret;
 }
@@ -200,7 +200,7 @@ int C_GetClientTunnelsName (int index, char* buf, size_t buf_len)
         int ret = i2p::api::GetClientTunnelsName(ret_str, index);
         if (ret == 0)
         {
-            snprintf(buf, buf_len, "%s", ret_str.c_str())
+            snprintf(buf, buf_len, "%s", ret_str.c_str());
         }
         return ret;
     }
@@ -215,7 +215,7 @@ int C_GetClientTunnelsIdent (int index, char* buf, size_t buf_len)
         int ret = i2p::api::GetClientTunnelsIdent(ret_str, index);
         if (ret == 0)
         {
-            snprintf(buf, buf_len, "%s", ret_str.c_str())
+            snprintf(buf, buf_len, "%s", ret_str.c_str());
         }
         return ret;
     }
@@ -228,7 +228,7 @@ int C_GetHTTPProxyIdent (char* buf, size_t buf_len)
     int ret = i2p::api::GetHTTPProxyIdent(ret_str);
     if (ret == 0)
     {
-        snprintf(buf, buf_len, "%s", ret_str.c_str())
+        snprintf(buf, buf_len, "%s", ret_str.c_str());
     }
     return ret;
 }
@@ -239,7 +239,7 @@ int C_GetSOCKSProxyIdent (char* buf, size_t buf_len)
     int ret = i2p::api::GetSOCKSProxyIdent(ret_str);
     if (ret == 0)
     {
-        snprintf(buf, buf_len, "%s", ret_str.c_str())
+        snprintf(buf, buf_len, "%s", ret_str.c_str());
     }
     return ret;
 }
@@ -252,7 +252,7 @@ int C_GetServerTunnelsName (int index, char* buf, size_t buf_len)
         int ret = i2p::api::GetServerTunnelsName(ret_str, index);
         if (ret == 0)
         {
-            snprintf(buf, buf_len, "%s", ret_str.c_str())
+            snprintf(buf, buf_len, "%s", ret_str.c_str());
         }
         return ret;
     }
@@ -267,7 +267,7 @@ int C_GetServerTunnelsIdent (int index, char* buf, size_t buf_len)
         int ret = i2p::api::GetServerTunnelsIdent(ret_str, index);
         if (ret == 0)
         {
-            snprintf(buf, buf_len, "%s", ret_str.c_str())
+            snprintf(buf, buf_len, "%s", ret_str.c_str());
         }
         return ret;
     }
@@ -294,7 +294,7 @@ int C_GetInboundTunnelsFormattedInfo (int index, char* buf, size_t buf_len)
         int ret = i2p::api::GetInboundTunnelsFormattedInfo(ret_str, index);
         if (ret == 0)
         {
-            snprintf(buf, buf_len, "%s", ret_str.c_str())
+            snprintf(buf, buf_len, "%s", ret_str.c_str());
         }
         return ret;
     }
@@ -309,7 +309,7 @@ int C_GetOutboundTunnelsFormattedInfo (int index, char* buf, size_t buf_len)
         int ret = i2p::api::GetOutboundTunnelsFormattedInfo(ret_str, index);
         if (ret == 0)
         {
-            snprintf(buf, buf_len, "%s", ret_str.c_str())
+            snprintf(buf, buf_len, "%s", ret_str.c_str());
         }
         return ret;
     }
@@ -326,7 +326,7 @@ int C_GenerateIdentToFile (const char * filename, const char * sk, uint16_t sigT
     int ret = i2p::api::GenerateIdentToFile(ret_str, str_filename, uint_sk, sigType, cryptoType);
     if (ret == 0)
     {
-        snprintf(buf, buf_len, "%s", ret_str.c_str())
+        snprintf(buf, buf_len, "%s", ret_str.c_str());
     }
     return ret;
 }
