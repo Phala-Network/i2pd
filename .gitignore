@@ -14,6 +14,7 @@ netDb
 /libi2pd.dll
 /libi2pdclient.dll
 /libi2pdlang.dll
+/libi2pdwrapper.a
 *.exe
 
 
